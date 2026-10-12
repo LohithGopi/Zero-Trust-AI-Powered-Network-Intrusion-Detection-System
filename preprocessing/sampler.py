@@ -10,7 +10,7 @@ class StratifiedNIDSSampler:
     @staticmethod
     def detect_target_column(df):
         """Identify label/target column in tabular dataset."""
-        possible = ["Label", "label", "target", "Target", "attack_cat", "class", "Class"]
+        possible = ["attack_cat", "Label", "label", "target", "Target", "class", "Class"]
         for col in possible:
             if col in df.columns:
                 return col

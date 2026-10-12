@@ -173,6 +173,45 @@ class ModelHistory(db.Model):
         }
 
 
+class LiveDetection(db.Model):
+    __tablename__ = 'live_detections'
+
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    source_ip = db.Column(db.String(45), nullable=False)
+    destination_ip = db.Column(db.String(45), nullable=False)
+    source_port = db.Column(db.Integer, nullable=True)
+    destination_port = db.Column(db.Integer, nullable=True)
+    protocol = db.Column(db.String(20), nullable=False)
+    flow_duration = db.Column(db.Float, default=0.0)
+    packet_count = db.Column(db.Integer, default=0)
+    bytes = db.Column(db.Integer, default=0)
+    prediction = db.Column(db.String(50), nullable=False)
+    confidence = db.Column(db.Float, default=0.0)
+    risk_level = db.Column(db.String(20), nullable=False)
+    interface = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(50), default="Analyzed")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S") if self.timestamp else "N/A",
+            "source_ip": self.source_ip,
+            "destination_ip": self.destination_ip,
+            "source_port": self.source_port,
+            "destination_port": self.destination_port,
+            "protocol": self.protocol,
+            "flow_duration": round(self.flow_duration, 3),
+            "packet_count": self.packet_count,
+            "bytes": self.bytes,
+            "prediction": self.prediction,
+            "confidence": round(self.confidence, 4),
+            "risk_level": self.risk_level,
+            "interface": self.interface,
+            "status": self.status
+        }
+
+
 def init_db(app):
     """Initialize database schemas and insert seed values efficiently."""
     db.init_app(app)
@@ -240,7 +279,7 @@ def init_db(app):
             role_map[role_name] = role
 
         # Seed default role accounts (Admin, Analyst)
-        from security.password import hash_password
+        from security.password import hash_password, check_password
 
         default_users = [
             ("admin", "admin@jnnce.ac.in", "admin123", "Admin"),
@@ -257,6 +296,10 @@ def init_db(app):
                     role_id=role_map[rname].id
                 )
                 db.session.add(u_obj)
+                db.session.commit()
+            elif not check_password(upass, u_obj.password_hash):
+                u_obj.password_hash = hash_password(upass)
+                u_obj.role_id = role_map[rname].id
                 db.session.commit()
 
         # Seed real benchmark datasets

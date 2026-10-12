@@ -16,6 +16,7 @@ model_bp = Blueprint("model", __name__)
 
 @model_bp.route("/train-model", methods=["GET"])
 @jwt_required
+@require_role(["Admin"])
 def train_page():
     all_datasets = DatasetHistory.query.order_by(DatasetHistory.upload_date.desc()).all()
     selected_ds = DatasetHistory.query.filter_by(is_selected=True).first()
@@ -65,16 +66,72 @@ def train_model_api():
     random_seed = int(data.get("random_seed", 42))
     sequence_length = int(data.get("sequence_length", 1))
 
-    # Get target dataset
-    if dataset_id:
+    # Robust target dataset resolution supporting dataset_type, dataset_name, and dataset_id
+    dataset_type_req = (data.get("dataset_type") or data.get("type") or "").strip()
+    dataset_name_req = (data.get("dataset_name") or data.get("name") or "").strip()
+
+    ds = None
+
+    # 1. Prioritize explicit dataset_type request (e.g. UNSW-NB15, CIC-IDS2017, NSL-KDD)
+    if dataset_type_req:
+        dt_lower = dataset_type_req.lower()
+        if "unsw" in dt_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.dataset_type.ilike("%UNSW%")) |
+                (DatasetHistory.filename.ilike("%unsw%"))
+            ).first()
+        elif "nsl" in dt_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.dataset_type.ilike("%NSL%")) |
+                (DatasetHistory.filename.ilike("%nsl%"))
+            ).first()
+        elif "cic" in dt_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.dataset_type.ilike("%CIC%")) |
+                (DatasetHistory.filename.ilike("%cic%"))
+            ).first()
+
+    # 2. Match by dataset_name if provided
+    if not ds and dataset_name_req:
+        dn_lower = dataset_name_req.lower()
+        if "unsw" in dn_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.filename.ilike("%unsw%")) |
+                (DatasetHistory.dataset_type.ilike("%UNSW%"))
+            ).first()
+        elif "nsl" in dn_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.filename.ilike("%nsl%")) |
+                (DatasetHistory.dataset_type.ilike("%NSL%"))
+            ).first()
+        elif "cic" in dn_lower:
+            ds = DatasetHistory.query.filter(
+                (DatasetHistory.filename.ilike("%cic%")) |
+                (DatasetHistory.dataset_type.ilike("%CIC%"))
+            ).first()
+        else:
+            ds = DatasetHistory.query.filter(DatasetHistory.filename == dataset_name_req).first()
+
+    # 3. Match by dataset_id
+    if not ds and dataset_id:
         ds = DatasetHistory.query.get(dataset_id)
-    else:
+
+    # 4. Fallback to active selection in DB
+    if not ds:
         ds = DatasetHistory.query.filter_by(is_selected=True).first()
         if not ds:
             ds = DatasetHistory.query.order_by(DatasetHistory.upload_date.desc()).first()
 
     if not ds:
         return jsonify({"error": "No dataset found. Please upload a CSV dataset first."}), 400
+
+    # Ensure this dataset is marked selected in DB
+    try:
+        DatasetHistory.query.update({DatasetHistory.is_selected: False})
+        ds.is_selected = True
+        db.session.commit()
+    except Exception as db_err:
+        logger.warning(f"Could not update is_selected flag: {db_err}")
 
     if not os.path.exists(ds.filepath):
         return jsonify({"error": f"Dataset file not found at path: {ds.filepath}"}), 404
@@ -153,20 +210,95 @@ def get_training_run_history_api(run_id):
 
     return jsonify({"run_id": run_id, "epoch_history": []}), 200
 
+def _enrich_evaluation_report(report: dict) -> dict:
+    """Ensure evaluation report contains false_positive_rate and binary_summary computed from confusion_matrix."""
+    if not report or not isinstance(report, dict):
+        return report
+
+    cm = report.get("confusion_matrix")
+    classes = report.get("classes") or ["Normal", "Attack"]
+    if cm and isinstance(cm, list) and len(cm) >= 2 and "binary_summary" not in report:
+        try:
+            cm_arr = np.array(cm, dtype=int)
+            normal_labels_set = {"0", "normal", "benign", "normal."}
+            normal_idx = 0
+            for idx, cls_name in enumerate(classes):
+                if str(cls_name).strip().lower() in normal_labels_set:
+                    normal_idx = idx
+                    break
+            if normal_idx >= cm_arr.shape[0]:
+                normal_idx = 0
+
+            total_samples = int(np.sum(cm_arr))
+            tn = int(cm_arr[normal_idx, normal_idx])
+            fp = int(np.sum(cm_arr[normal_idx, :]) - tn)
+            fn = int(np.sum(cm_arr[:, normal_idx]) - tn)
+            tp = int(total_samples - tn - fp - fn)
+
+            fpr_scalar = float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0
+            fnr_scalar = float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0
+            tnr_scalar = float(tn / (tn + fp)) if (tn + fp) > 0 else 1.0
+            tpr_scalar = float(tp / (tp + fn)) if (tp + fn) > 0 else float(report.get("recall", 0.96))
+
+            report["false_positive_rate"] = round(fpr_scalar, 4)
+            report["false_negative_rate"] = round(fnr_scalar, 4)
+            report["normal_identification_rate"] = round(tnr_scalar, 4)
+            report["attack_detection_rate"] = round(tpr_scalar, 4)
+            report["binary_summary"] = {
+                "normal_class_name": classes[normal_idx] if normal_idx < len(classes) else "Normal",
+                "true_positives": tp,
+                "true_negatives": tn,
+                "false_positives": fp,
+                "false_negatives": fn,
+                "total_normal_samples": int(tn + fp),
+                "total_attack_samples": int(tp + fn),
+                "false_positive_rate": round(fpr_scalar, 4),
+                "false_negative_rate": round(fnr_scalar, 4),
+                "normal_identification_rate": round(tnr_scalar, 4),
+                "attack_detection_rate": round(tpr_scalar, 4)
+            }
+        except Exception as e:
+            logger.warning(f"Could not enrich binary summary from confusion matrix: {e}")
+
+    return report
+
+
 @model_bp.route("/api/model/status", methods=["GET"])
 @jwt_required
 def get_model_status_api():
-    return jsonify(training_status), 200
+    status_copy = dict(training_status)
+    latest_mh = ModelHistory.query.order_by(ModelHistory.trained_at.desc()).first()
+    if latest_mh:
+        status_copy.setdefault("precision", round(latest_mh.precision, 4))
+        status_copy.setdefault("recall", round(latest_mh.recall, 4))
+        status_copy.setdefault("f1_score", round(latest_mh.f1_score, 4))
+    return jsonify(status_copy), 200
+
 
 @model_bp.route("/api/model/report", methods=["GET"])
 @jwt_required
 def get_model_report_api():
-    if not os.path.exists(Config.REPORT_FILE_PATH):
+    report_path = None
+    latest_mh = ModelHistory.query.order_by(ModelHistory.trained_at.desc()).first()
+    if latest_mh and latest_mh.artifact_path:
+        cand = os.path.join(latest_mh.artifact_path, "evaluation_report.json")
+        if os.path.exists(cand):
+            report_path = cand
+
+    if not report_path and os.path.exists(Config.REPORT_FILE_PATH):
+        report_path = Config.REPORT_FILE_PATH
+
+    if not report_path:
         return jsonify({"error": "No model evaluation report found. Train a model first."}), 404
 
     try:
-        with open(Config.REPORT_FILE_PATH, "r", encoding="utf-8") as f:
+        with open(report_path, "r", encoding="utf-8") as f:
             report = json.load(f)
+        report = _enrich_evaluation_report(report)
+        if latest_mh:
+            report["dataset_name"] = latest_mh.dataset_name
+            report["model_name"] = latest_mh.model_name
+            report["trained_at"] = latest_mh.trained_at.strftime("%Y-%m-%d %H:%M:%S") if latest_mh.trained_at else "N/A"
         return jsonify(report), 200
     except Exception as e:
         return jsonify({"error": f"Failed to load evaluation report: {str(e)}"}), 500

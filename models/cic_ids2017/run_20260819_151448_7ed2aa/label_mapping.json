@@ -1,0 +1,9 @@
+{
+  "0": "BENIGN",
+  "1": "DDoS",
+  "2": "DoS GoldenEye",
+  "3": "DoS Hulk",
+  "4": "FTP-Patator",
+  "5": "PortScan",
+  "6": "Web Attack"
+}

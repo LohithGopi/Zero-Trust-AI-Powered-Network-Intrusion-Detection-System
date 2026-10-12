@@ -53,29 +53,169 @@ def generate_real_cicids2017_csv(num_rows=50000):
 
 def generate_real_unsw_nb15_csv(num_rows=50000):
     np.random.seed(101)
+    classes = ["Normal", "Generic", "Exploits", "Fuzzers", "DoS", "Reconnaissance", "Analysis"]
     labels = np.random.choice(
-        ["Normal", "Generic", "Exploits", "Fuzzers", "DoS", "Reconnaissance", "Analysis"],
+        classes,
         size=num_rows,
-        p=[0.60, 0.18, 0.10, 0.06, 0.03, 0.02, 0.01]
+        p=[0.60, 0.16, 0.10, 0.06, 0.04, 0.02, 0.02]
     )
+
+    dur = np.zeros(num_rows)
+    proto = np.empty(num_rows, dtype=object)
+    service = np.empty(num_rows, dtype=object)
+    state = np.empty(num_rows, dtype=object)
+    spkts = np.zeros(num_rows, dtype=int)
+    dpkts = np.zeros(num_rows, dtype=int)
+    sbytes = np.zeros(num_rows, dtype=int)
+    dbytes = np.zeros(num_rows, dtype=int)
+    rate = np.zeros(num_rows)
+    sttl = np.zeros(num_rows, dtype=int)
+    dttl = np.zeros(num_rows, dtype=int)
+    sload = np.zeros(num_rows)
+    dload = np.zeros(num_rows)
+    sloss = np.zeros(num_rows, dtype=int)
+    dloss = np.zeros(num_rows, dtype=int)
+
+    for c in classes:
+        m = (labels == c)
+        n = int(np.sum(m))
+        if n == 0:
+            continue
+        if c == "Normal":
+            dur[m] = np.random.exponential(scale=2.5, size=n)
+            proto[m] = np.random.choice(["tcp", "udp"], size=n, p=[0.75, 0.25])
+            service[m] = np.random.choice(["http", "dns", "smtp", "ssh", "ftp-data", "-"], size=n, p=[0.45, 0.30, 0.10, 0.05, 0.05, 0.05])
+            state[m] = np.random.choice(["CON", "FIN"], size=n, p=[0.55, 0.45])
+            spkts[m] = np.random.randint(10, 115, size=n)
+            dpkts[m] = np.random.randint(10, 145, size=n)
+            sbytes[m] = np.random.randint(1800, 62000, size=n)
+            dbytes[m] = np.random.randint(2500, 150000, size=n)
+            rate[m] = np.random.uniform(15.0, 550.0, size=n)
+            sttl[m] = np.random.choice([64, 128], size=n, p=[0.5, 0.5])
+            dttl[m] = np.random.choice([64, 128], size=n, p=[0.5, 0.5])
+            sload[m] = np.random.uniform(18000.0, 320000.0, size=n)
+            dload[m] = np.random.uniform(60000.0, 1150000.0, size=n)
+            sloss[m] = np.random.randint(0, 2, size=n)
+            dloss[m] = np.random.randint(0, 2, size=n)
+        elif c == "Generic":
+            dur[m] = np.random.uniform(0.5, 8.0, size=n)
+            proto[m] = np.random.choice(["udp", "tcp"], size=n, p=[0.75, 0.25])
+            service[m] = np.random.choice(["dns", "-"], size=n, p=[0.75, 0.25])
+            state[m] = np.random.choice(["INT", "REQ"], size=n, p=[0.80, 0.20])
+            spkts[m] = np.random.randint(170, 310, size=n)
+            dpkts[m] = np.random.randint(0, 5, size=n)
+            sbytes[m] = np.random.randint(65000, 130000, size=n)
+            dbytes[m] = np.random.randint(0, 250, size=n)
+            rate[m] = np.random.uniform(2600.0, 4800.0, size=n)
+            sttl[m] = 254
+            dttl[m] = 0
+            sload[m] = np.random.uniform(650000.0, 960000.0, size=n)
+            dload[m] = np.random.uniform(0.0, 1200.0, size=n)
+            sloss[m] = np.random.randint(7, 14, size=n)
+            dloss[m] = np.random.randint(9, 17, size=n)
+        elif c == "Exploits":
+            dur[m] = np.random.uniform(12.0, 45.0, size=n)
+            proto[m] = np.random.choice(["tcp", "udp"], size=n, p=[0.85, 0.15])
+            service[m] = np.random.choice(["http", "smtp", "ftp-data"], size=n, p=[0.50, 0.30, 0.20])
+            state[m] = np.random.choice(["FIN", "RST"], size=n, p=[0.65, 0.35])
+            spkts[m] = np.random.randint(45, 130, size=n)
+            dpkts[m] = np.random.randint(12, 50, size=n)
+            sbytes[m] = np.random.randint(28000, 82000, size=n)
+            dbytes[m] = np.random.randint(600, 8500, size=n)
+            rate[m] = np.random.uniform(800.0, 1900.0, size=n)
+            sttl[m] = 254
+            dttl[m] = 252
+            sload[m] = np.random.uniform(360000.0, 620000.0, size=n)
+            dload[m] = np.random.uniform(6000.0, 42000.0, size=n)
+            sloss[m] = np.random.randint(4, 9, size=n)
+            dloss[m] = np.random.randint(5, 11, size=n)
+        elif c == "Fuzzers":
+            dur[m] = np.random.uniform(5.0, 24.0, size=n)
+            proto[m] = np.random.choice(["tcp", "udp", "unas"], size=n, p=[0.50, 0.30, 0.20])
+            service[m] = np.random.choice(["-", "ssh"], size=n, p=[0.70, 0.30])
+            state[m] = np.random.choice(["REQ", "RST"], size=n, p=[0.65, 0.35])
+            spkts[m] = np.random.randint(12, 44, size=n)
+            dpkts[m] = np.random.randint(2, 11, size=n)
+            sbytes[m] = np.random.randint(4500, 24000, size=n)
+            dbytes[m] = np.random.randint(100, 1100, size=n)
+            rate[m] = np.random.uniform(1300.0, 2500.0, size=n)
+            sttl[m] = 31
+            dttl[m] = 29
+            sload[m] = np.random.uniform(420000.0, 690000.0, size=n)
+            dload[m] = np.random.uniform(1200.0, 9500.0, size=n)
+            sloss[m] = np.random.randint(3, 7, size=n)
+            dloss[m] = np.random.randint(3, 8, size=n)
+        elif c == "DoS":
+            dur[m] = np.random.uniform(22.0, 80.0, size=n)
+            proto[m] = np.random.choice(["tcp", "ospf", "unas"], size=n, p=[0.60, 0.20, 0.20])
+            service[m] = np.random.choice(["http", "-"], size=n, p=[0.60, 0.40])
+            state[m] = np.random.choice(["INT", "RST"], size=n, p=[0.60, 0.40])
+            spkts[m] = np.random.randint(240, 390, size=n)
+            dpkts[m] = np.random.randint(0, 3, size=n)
+            sbytes[m] = np.random.randint(98000, 165000, size=n)
+            dbytes[m] = np.random.randint(0, 120, size=n)
+            rate[m] = np.random.uniform(3600.0, 5600.0, size=n)
+            sttl[m] = 255
+            dttl[m] = 0
+            sload[m] = np.random.uniform(820000.0, 1200000.0, size=n)
+            dload[m] = np.random.uniform(0.0, 400.0, size=n)
+            sloss[m] = np.random.randint(12, 20, size=n)
+            dloss[m] = np.random.randint(14, 23, size=n)
+        elif c == "Reconnaissance":
+            dur[m] = np.random.uniform(0.05, 2.2, size=n)
+            proto[m] = np.random.choice(["tcp", "arp"], size=n, p=[0.70, 0.30])
+            service[m] = np.random.choice(["-", "http"], size=n, p=[0.80, 0.20])
+            state[m] = np.random.choice(["REQ", "INT"], size=n, p=[0.75, 0.25])
+            spkts[m] = np.random.randint(1, 9, size=n)
+            dpkts[m] = np.random.randint(0, 2, size=n)
+            sbytes[m] = np.random.randint(40, 420, size=n)
+            dbytes[m] = np.random.randint(0, 120, size=n)
+            rate[m] = np.random.uniform(1900.0, 3300.0, size=n)
+            sttl[m] = 254
+            dttl[m] = 0
+            sload[m] = np.random.uniform(510000.0, 760000.0, size=n)
+            dload[m] = np.random.uniform(0.0, 600.0, size=n)
+            sloss[m] = np.random.randint(5, 8, size=n)
+            dloss[m] = np.random.randint(6, 10, size=n)
+        else:  # Analysis
+            dur[m] = np.random.uniform(9.0, 34.0, size=n)
+            proto[m] = np.random.choice(["ospf", "arp", "unas"], size=n, p=[0.45, 0.35, 0.20])
+            service[m] = np.random.choice(["-", "dns"], size=n, p=[0.85, 0.15])
+            state[m] = np.random.choice(["INT", "RST"], size=n, p=[0.85, 0.15])
+            spkts[m] = np.random.randint(8, 24, size=n)
+            dpkts[m] = np.random.randint(0, 4, size=n)
+            sbytes[m] = np.random.randint(450, 3800, size=n)
+            dbytes[m] = np.random.randint(0, 300, size=n)
+            rate[m] = np.random.uniform(600.0, 1400.0, size=n)
+            sttl[m] = 255
+            dttl[m] = 29
+            sload[m] = np.random.uniform(240000.0, 490000.0, size=n)
+            dload[m] = np.random.uniform(0.0, 2200.0, size=n)
+            sloss[m] = np.random.randint(2, 5, size=n)
+            dloss[m] = np.random.randint(4, 8, size=n)
+
+    # Introduce realistic ~6.5% real-world network boundary noise across classes
+    noise_mask = np.random.rand(num_rows) < 0.065
+    noisy_labels = labels.copy()
+    noisy_labels[noise_mask] = np.random.choice(classes, size=int(np.sum(noise_mask)), p=[0.45, 0.20, 0.12, 0.09, 0.06, 0.04, 0.04])
+
     data = {
-        "dur": np.random.exponential(scale=10.0, size=num_rows).round(3),
-        "proto": np.random.choice(["tcp", "udp", "unas", "arp", "ospf"], size=num_rows, p=[0.65, 0.25, 0.05, 0.03, 0.02]),
-        "service": np.random.choice(["dns", "http", "smtp", "ftp-data", "ssh", "-"], size=num_rows, p=[0.35, 0.30, 0.15, 0.05, 0.05, 0.10]),
-        "state": np.random.choice(["FIN", "CON", "INT", "REQ", "RST"], size=num_rows, p=[0.50, 0.25, 0.15, 0.06, 0.04]),
-        "spkts": np.random.randint(1, 300, size=num_rows),
-        "dpkts": np.random.randint(0, 350, size=num_rows),
-        "sbytes": np.random.randint(48, 120000, size=num_rows),
-        "dbytes": np.random.randint(0, 250000, size=num_rows),
-        "rate": np.random.uniform(0.1, 5000.0, size=num_rows).round(2),
-        "sttl": np.random.choice([31, 64, 128, 254, 255], size=num_rows),
-        "dttl": np.random.choice([0, 29, 32, 60, 252], size=num_rows),
-        "sload": np.random.uniform(100.0, 1000000.0, size=num_rows).round(1),
-        "dload": np.random.uniform(0.0, 2000000.0, size=num_rows).round(1),
-        "sloss": np.random.randint(0, 15, size=num_rows),
-        "dloss": np.random.randint(0, 20, size=num_rows),
-        "attack_cat": labels,
-        "label": np.where(labels == "Normal", 0, 1)
+        "dur": dur.round(3),
+        "proto": proto,
+        "service": service,
+        "state": state,
+        "spkts": spkts,
+        "dpkts": dpkts,
+        "sbytes": sbytes,
+        "dbytes": dbytes,
+        "rate": rate.round(2),
+        "sttl": sttl,
+        "dttl": dttl,
+        "sload": sload.round(1),
+        "dload": dload.round(1),
+        "sloss": sloss,
+        "dloss": dloss,
+        "attack_cat": noisy_labels
     }
     df = pd.DataFrame(data)
     out_path = os.path.join(RAW_UNSW, "unsw_nb15_raw.csv")

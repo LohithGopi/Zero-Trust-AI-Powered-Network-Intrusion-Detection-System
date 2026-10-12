@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Shield, Lock, User, ArrowLeft, CheckCircle2, AlertCircle, Key, Eye, EyeOff } from 'lucide-react';
+import { Lock, ArrowLeft, Key, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin }) => {
   const { login } = useAuth();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState('Admin');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,41 +37,48 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0B0D0F] text-[#172033] dark:text-[#F3F4F1] flex flex-col justify-between p-4 sm:p-6 lg:p-8 transition-colors">
+    <div className="min-h-screen bg-[#f4f7fc] text-slate-900 flex flex-col justify-between selection:bg-blue-500/20 selection:text-blue-600 p-4 sm:p-6 lg:p-8">
       
       {/* Top Header */}
-      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+      <div className="max-w-7xl mx-auto w-full flex items-center justify-between pt-1">
         <button
           onClick={onBackToLanding}
-          className="flex items-center space-x-2 text-xs font-semibold text-[#475569] dark:text-[#9FA6A8] hover:text-[#1769E0] transition-colors"
+          className="flex items-center space-x-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Home Page</span>
         </button>
 
         <div className="flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-[#1769E0]" />
-          <span className="font-bold text-sm text-[#172033] dark:text-[#F3F4F1]">Zero Trust AI-Powered NIDS</span>
+          <Shield className="h-4 w-4 text-blue-600 stroke-[2.2]" />
+          <span className="font-bold text-xs sm:text-sm text-slate-900">
+            Zero Trust AI-Powered NIDS
+          </span>
         </div>
       </div>
 
-      {/* Main Login Card Area */}
-      <div className="max-w-md w-full mx-auto my-8">
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-2xl p-6 sm:p-8 shadow-hero">
+      {/* Main Login Card */}
+      <div className="max-w-[440px] w-full mx-auto my-8">
+        <div className="bg-white rounded-3xl p-7 sm:p-9 shadow-xl shadow-blue-500/5 border border-slate-200/90 space-y-6">
           
-          <div className="text-center mb-6">
-            <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-[#1769E0] flex items-center justify-center mx-auto mb-3 border border-blue-100 dark:border-blue-800">
+          {/* Header icon and text */}
+          <div className="text-center space-y-2">
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-xs">
               <Lock className="h-6 w-6" />
             </div>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1769E0] bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-0.5 rounded-full border border-blue-200 inline-block">
               SECURITY PORTAL
             </span>
-            <h2 className="text-xl font-bold text-[#172033] dark:text-[#F3F4F1] mt-2">Sign In to Account</h2>
-            <p className="text-xs text-[#475569] dark:text-[#9FA6A8] mt-1">Select role and enter your credentials to authenticate.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+              Sign In to Account
+            </h2>
+            <p className="text-xs text-slate-500">
+              Select role and enter your credentials to authenticate.
+            </p>
           </div>
 
-          {/* Role Selection Tabs */}
-          <div className="grid grid-cols-2 gap-1 bg-[#F5F7FA] dark:bg-[#0B0D0F] p-1 rounded-xl border border-[#E2E8F0] dark:border-[#252A2E] mb-6 text-xs font-medium">
+          {/* Role Toggle Selector */}
+          <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200/80 text-xs font-semibold">
             {['Admin', 'Analyst'].map((role) => (
               <button
                 key={role}
@@ -80,8 +86,8 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
                 onClick={() => handleRoleSelect(role)}
                 className={`py-2 rounded-lg transition-all text-center ${
                   selectedRole === role
-                    ? 'bg-white dark:bg-[#15191C] text-[#1769E0] font-bold shadow-sm border border-[#E2E8F0] dark:border-[#252A2E]'
-                    : 'text-[#475569] dark:text-[#9FA6A8] hover:text-[#172033] dark:hover:text-white'
+                    ? 'bg-white text-blue-600 font-bold shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {role}
@@ -89,73 +95,66 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
             ))}
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>
-              <label className="block text-xs font-medium text-[#172033] dark:text-[#F3F4F1] mb-1">Username / Email</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Username / Email
+              </label>
               <input
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-[#F5F7FA] dark:bg-[#0B0D0F] border border-[#E2E8F0] dark:border-[#252A2E] focus:border-[#1769E0] focus:bg-white rounded-lg p-2.5 text-xs text-[#172033] dark:text-[#F3F4F1] outline-none transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                placeholder="Enter username"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-[#172033] dark:text-[#F3F4F1]">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Password
+                </label>
                 <button
                   type="button"
                   onClick={onForgotPassword}
-                  className="text-xs text-[#1769E0] hover:underline"
+                  className="text-xs text-blue-600 hover:underline font-medium"
                 >
                   Forgot Password?
                 </button>
               </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F5F7FA] dark:bg-[#0B0D0F] border border-[#E2E8F0] dark:border-[#252A2E] focus:border-[#1769E0] focus:bg-white rounded-lg p-2.5 pr-10 text-xs text-[#172033] dark:text-[#F3F4F1] outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] dark:text-[#9FA6A8] hover:text-[#1769E0] transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                placeholder="••••••••"
+              />
             </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-[#1769E0] hover:bg-[#0F3B68] text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+              className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-xs transition-all active:scale-95 disabled:opacity-50"
             >
-              {loading ? (
-                <span>Authenticating...</span>
-              ) : (
-                <>
-                  <Key className="h-4 w-4" />
-                  <span>Authenticate & Access Portal</span>
-                </>
-              )}
+              <Key className="h-4 w-4" />
+              <span>{loading ? 'Authenticating...' : 'Authenticate & Access Portal'}</span>
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-[#E2E8F0] dark:border-[#252A2E] text-center">
-            <span className="text-[11px] font-mono text-[#475569] dark:text-[#9FA6A8] block">
-              Zero Trust Role: <strong className="text-[#1769E0]">{selectedRole} Tier</strong>
+          {/* Role Status Tag */}
+          <div className="text-center pt-4 border-t border-slate-100">
+            <span className="text-xs font-mono text-slate-500">
+              Zero Trust Role:{' '}
+              <span className="font-bold text-blue-600">{selectedRole} Tier</span>
             </span>
           </div>
 
@@ -163,9 +162,9 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs text-[#475569] dark:text-[#9FA6A8] font-mono">
+      <footer className="text-center font-mono text-[11px] text-slate-400 pb-2">
         © 2026 Zero Trust AI-Powered NIDS • Academic Phase 1 Implementation
-      </div>
+      </footer>
 
     </div>
   );

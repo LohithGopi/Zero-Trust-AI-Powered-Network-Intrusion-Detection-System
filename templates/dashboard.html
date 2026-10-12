@@ -18,9 +18,11 @@
         <a href="{{ url_for('dataset.upload_page') }}" class="btn btn-primary px-3.5 py-2 fw-medium d-inline-flex align-items-center gap-2">
             <i class="bi bi-cloud-upload"></i> Upload Dataset
         </a>
+        {% if user.role == 'Admin' %}
         <a href="{{ url_for('model.train_page') }}" class="btn btn-outline-primary px-3.5 py-2 fw-medium d-inline-flex align-items-center gap-2">
             <i class="bi bi-play-circle"></i> Train Model
         </a>
+        {% endif %}
     </div>
 </div>
 
@@ -165,6 +167,7 @@
             </div>
         </div>
 
+        {% if user.role == 'Admin' %}
         <!-- 3. Preprocess & Train Model -->
         <div class="col-md-4">
             <div class="action-card h-100 bg-primary bg-opacity-10 border-primary-subtle">
@@ -179,6 +182,7 @@
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 

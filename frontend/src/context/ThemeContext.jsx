@@ -4,7 +4,7 @@ const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem('nids_theme_mode') || 'system';
+    return localStorage.getItem('nids_theme_mode') || 'light';
   });
 
   const [isDark, setIsDark] = useState(false);

@@ -7,6 +7,7 @@ from security.zero_trust import jwt_required
 from api.auth_routes import auth_bp
 from api.dataset_routes import dataset_bp
 from api.model_routes import model_bp
+from api.live_detection_routes import live_detection_bp
 from utils.logger import logger, log_audit_event
 
 def create_app():
@@ -22,6 +23,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(dataset_bp)
     app.register_blueprint(model_bp)
+    app.register_blueprint(live_detection_bp)
 
     @app.before_request
     def load_user_context():
@@ -83,6 +85,14 @@ def create_app():
     def serve_logo():
         return send_from_directory('frontend/public', 'jnnce_logo.png')
 
+    @app.route("/trojan")
+    @app.route("/academic")
+    def spa_landing_routes():
+        dist_index = os.path.join(app.root_path, 'frontend', 'dist', 'index.html')
+        if os.path.exists(dist_index):
+            return send_from_directory('frontend/dist', 'index.html')
+        return redirect(url_for("index"))
+
     @app.route('/<path:path>')
     def serve_static_or_spa(path):
         dist_file = os.path.join(app.root_path, 'frontend', 'dist', path)
@@ -120,7 +130,16 @@ def create_app():
     def page_not_found(e):
         if request.path.startswith("/api/"):
             return jsonify({"error": "Resource Not Found"}), 404
+        dist_index = os.path.join(app.root_path, 'frontend', 'dist', 'index.html')
+        if os.path.exists(dist_index):
+            return send_from_directory('frontend/dist', 'index.html')
         return render_template("base.html", error="Page Not Found"), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Method Not Allowed", "message": str(e)}), 405
+        return render_template("base.html", error="Method Not Allowed"), 405
 
     @app.errorhandler(500)
     def internal_server_error(e):

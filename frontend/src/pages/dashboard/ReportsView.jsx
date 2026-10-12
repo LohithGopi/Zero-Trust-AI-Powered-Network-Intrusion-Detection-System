@@ -83,10 +83,14 @@ export const ReportsView = () => {
         <div className="p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 text-xs font-mono space-y-2">
           <div className="flex items-center space-x-2 text-sm font-bold text-amber-800 dark:text-amber-300">
             <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-            <span>MODEL PENDING TRAINING FOR THIS SESSION</span>
+            <span>MODEL PENDING TRAINING</span>
           </div>
           <p className="leading-relaxed">
-            The model status is currently <strong>Untrained</strong> for this session. Go to the <strong>Model Training</strong> tab and click <strong>Start Model Training</strong> to execute the training pipeline and generate evaluation metrics.
+            {role === 'Admin' ? (
+              <>The model status is currently <strong>Untrained</strong> for this session. Go to the <strong>Model Training</strong> tab and click <strong>Start Model Training</strong> to execute the training pipeline and generate evaluation metrics.</>
+            ) : (
+              <>The model status is currently <strong>Untrained</strong>. Model training is executed in the Admin section.</>
+            )}
           </p>
         </div>
       )}

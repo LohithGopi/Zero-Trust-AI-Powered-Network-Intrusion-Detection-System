@@ -51,7 +51,7 @@ class BaseNIDSPreprocessor:
 class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
     """Dataset-specific preprocessing for CIC-IDS2017 benchmark dataset."""
 
-    def process(self, df: pd.DataFrame, target_col: str = None) -> tuple[dict, tuple]:
+    def process(self, df: pd.DataFrame, target_col: str = None, random_seed: int = 42) -> tuple[dict, tuple]:
         # Strip column whitespace
         df.columns = df.columns.str.strip()
 
@@ -89,10 +89,10 @@ class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
 
         # Train / Validation / Test Split BEFORE scaling to prevent leakage
         X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=42, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
         )
         X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
         )
 
         # Fit StandardScaler ONLY on X_train
@@ -109,9 +109,14 @@ class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
             "validation_rows": len(X_val),
             "testing_rows": len(X_test),
             "total_features": X_df.shape[1],
+            "feature_names": self.feature_names,
             "num_classes": len(self.label_encoder.classes_),
             "classes": self.label_encoder.classes_.tolist(),
-            "target_col": target_col
+            "target_col": target_col,
+            "scaled_min": float(np.min(X_train)),
+            "scaled_max": float(np.max(X_train)),
+            "scaled_mean": float(np.mean(X_train)),
+            "scaled_std": float(np.std(X_train))
         }
 
         return summary, (X_train, y_train, X_val, y_val, X_test, y_test)
@@ -120,10 +125,12 @@ class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
 class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
     """Dataset-specific preprocessing for UNSW-NB15 benchmark dataset."""
 
-    def process(self, df: pd.DataFrame, target_col: str = None) -> tuple[dict, tuple]:
+    def process(self, df: pd.DataFrame, target_col: str = None, random_seed: int = 42) -> tuple[dict, tuple]:
         df.columns = df.columns.str.strip()
 
-        if not target_col:
+        if "attack_cat" in df.columns:
+            target_col = "attack_cat"
+        elif not target_col:
             for c in ["attack_cat", "label", "Label", "target"]:
                 if c in df.columns:
                     target_col = c
@@ -142,8 +149,11 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
         y_encoded = self.label_encoder.fit_transform(y_raw)
 
         X_df = df.drop(columns=[target_col])
-        if "label" in X_df.columns and target_col == "attack_cat":
-            X_df = X_df.drop(columns=["label"])
+        # Eliminate target leakage: drop all label and attack category annotations from input features
+        leakage_cols = ["attack_cat", "label", "Label", "target", "Target", "id", "ID"]
+        drop_from_X = [c for c in leakage_cols if c in X_df.columns]
+        if drop_from_X:
+            X_df = X_df.drop(columns=drop_from_X)
 
         self.feature_names = X_df.columns.tolist()
 
@@ -156,10 +166,10 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
         X_df = X_df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
 
         X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=42, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
         )
         X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
         )
 
         X_train = self.scaler.fit_transform(X_train_raw)
@@ -175,9 +185,14 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
             "validation_rows": len(X_val),
             "testing_rows": len(X_test),
             "total_features": X_df.shape[1],
+            "feature_names": self.feature_names,
             "num_classes": len(self.label_encoder.classes_),
             "classes": self.label_encoder.classes_.tolist(),
-            "target_col": target_col
+            "target_col": target_col,
+            "scaled_min": float(np.min(X_train)),
+            "scaled_max": float(np.max(X_train)),
+            "scaled_mean": float(np.mean(X_train)),
+            "scaled_std": float(np.std(X_train))
         }
 
         return summary, (X_train, y_train, X_val, y_val, X_test, y_test)
@@ -186,7 +201,7 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
 class NSLKDDPreprocessor(BaseNIDSPreprocessor):
     """Dataset-specific preprocessing for NSL-KDD benchmark dataset."""
 
-    def process(self, df: pd.DataFrame, target_col: str = None) -> tuple[dict, tuple]:
+    def process(self, df: pd.DataFrame, target_col: str = None, random_seed: int = 42) -> tuple[dict, tuple]:
         df.columns = df.columns.str.strip()
 
         if not target_col:
@@ -203,6 +218,10 @@ class NSLKDDPreprocessor(BaseNIDSPreprocessor):
         y_encoded = self.label_encoder.fit_transform(y_raw)
 
         X_df = df.drop(columns=[target_col])
+        leakage_cols = ["label", "Label", "target", "class", "difficulty_level", "difficulty"]
+        drop_from_X = [c for c in leakage_cols if c in X_df.columns]
+        if drop_from_X:
+            X_df = X_df.drop(columns=drop_from_X)
         self.feature_names = X_df.columns.tolist()
 
         cat_cols = X_df.select_dtypes(include=['object', 'category']).columns.tolist()
@@ -214,10 +233,10 @@ class NSLKDDPreprocessor(BaseNIDSPreprocessor):
         X_df = X_df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
 
         X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=42, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
         )
         X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
         )
 
         X_train = self.scaler.fit_transform(X_train_raw)
@@ -233,9 +252,14 @@ class NSLKDDPreprocessor(BaseNIDSPreprocessor):
             "validation_rows": len(X_val),
             "testing_rows": len(X_test),
             "total_features": X_df.shape[1],
+            "feature_names": self.feature_names,
             "num_classes": len(self.label_encoder.classes_),
             "classes": self.label_encoder.classes_.tolist(),
-            "target_col": target_col
+            "target_col": target_col,
+            "scaled_min": float(np.min(X_train)),
+            "scaled_max": float(np.max(X_train)),
+            "scaled_mean": float(np.mean(X_train)),
+            "scaled_std": float(np.std(X_train))
         }
 
         return summary, (X_train, y_train, X_val, y_val, X_test, y_test)

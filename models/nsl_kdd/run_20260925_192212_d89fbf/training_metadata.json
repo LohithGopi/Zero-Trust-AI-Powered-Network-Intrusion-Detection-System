@@ -1,0 +1,102 @@
+{
+  "run_id": "run_20260925_192212_d89fbf",
+  "dataset_name": "nsl_kdd_raw.csv",
+  "dataset_type": "NSL-KDD",
+  "total_dataset_rows": 148517,
+  "training_rows": 25000,
+  "random_seed": 42,
+  "sequence_length": 1,
+  "epochs": 10,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "accuracy": 0.9016,
+  "loss": 0.2227,
+  "precision": 0.8849,
+  "recall": 0.9016,
+  "f1_score": 0.8843,
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "accuracy": 0.9028,
+      "loss": 0.233,
+      "val_accuracy": 0.9027,
+      "val_loss": 0.2346,
+      "delta_w": 17.189
+    },
+    {
+      "epoch": 2,
+      "accuracy": 0.9038,
+      "loss": 0.2204,
+      "val_accuracy": 0.8971,
+      "val_loss": 0.2236,
+      "delta_w": 1.8968
+    },
+    {
+      "epoch": 3,
+      "accuracy": 0.9063,
+      "loss": 0.2145,
+      "val_accuracy": 0.9037,
+      "val_loss": 0.218,
+      "delta_w": 1.2902
+    },
+    {
+      "epoch": 4,
+      "accuracy": 0.9076,
+      "loss": 0.2115,
+      "val_accuracy": 0.9051,
+      "val_loss": 0.2174,
+      "delta_w": 1.1112
+    },
+    {
+      "epoch": 5,
+      "accuracy": 0.9077,
+      "loss": 0.2089,
+      "val_accuracy": 0.9072,
+      "val_loss": 0.218,
+      "delta_w": 1.0854
+    },
+    {
+      "epoch": 6,
+      "accuracy": 0.9075,
+      "loss": 0.2067,
+      "val_accuracy": 0.9067,
+      "val_loss": 0.2169,
+      "delta_w": 1.015
+    },
+    {
+      "epoch": 7,
+      "accuracy": 0.9095,
+      "loss": 0.2042,
+      "val_accuracy": 0.9037,
+      "val_loss": 0.2154,
+      "delta_w": 1.0316
+    },
+    {
+      "epoch": 8,
+      "accuracy": 0.9105,
+      "loss": 0.2036,
+      "val_accuracy": 0.9048,
+      "val_loss": 0.2158,
+      "delta_w": 1.0393
+    },
+    {
+      "epoch": 9,
+      "accuracy": 0.911,
+      "loss": 0.2058,
+      "val_accuracy": 0.9005,
+      "val_loss": 0.2213,
+      "delta_w": 1.0305
+    },
+    {
+      "epoch": 10,
+      "accuracy": 0.9118,
+      "loss": 0.2021,
+      "val_accuracy": 0.9043,
+      "val_loss": 0.219,
+      "delta_w": 1.077
+    }
+  ],
+  "artifact_dir": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\models\\nsl_kdd\\run_20260925_192212_d89fbf",
+  "saved_model_path": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\models\\nsl_kdd\\run_20260925_192212_d89fbf\\model.joblib",
+  "trained_at": "2026-09-25 13:52:58 UTC"
+}

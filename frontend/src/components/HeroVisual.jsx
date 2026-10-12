@@ -1,89 +1,100 @@
 import React from 'react';
-import { Shield, Cpu, Lock, Activity, Zap, Radio } from 'lucide-react';
+import { Shield, Cpu, Lock, Activity, Radio, CheckCircle2, AlertOctagon, Terminal } from 'lucide-react';
 
 export const HeroVisual = () => {
   return (
-    <div className="relative w-full h-[380px] sm:h-[420px] rounded-2xl glass-panel border border-[#252A2E] overflow-hidden flex items-center justify-center p-6 my-8">
-      {/* Background ambient glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-indigo-500/5 to-transparent pointer-events-none" />
+    <div className="relative w-full rounded-2xl floating-surface p-6 sm:p-8 overflow-hidden">
       
-      {/* Grid Pattern Background */}
-      <div 
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(#38BDF8 1px, transparent 1px)`,
-          backgroundSize: '24px 24px'
-        }}
-      />
+      {/* Background Subtle Depth Atmosphere */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(30,96,213,0.1),transparent_60%)] pointer-events-none" />
+      
+      {/* Top Telemetry Header Rail */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/5 mb-6 text-xs font-mono">
+        <div className="flex items-center space-x-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-slate-600 dark:text-slate-400 font-bold">STATE: REAL-TIME CONTINUOUS INSPECTION</span>
+        </div>
+        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+          LSTM RECURRENT INFERENCE
+        </div>
+      </div>
 
-      {/* Abstract Network Visual Nodes */}
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+      {/* Layered Visual Composition */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs mb-6">
         
-        {/* Top Node Flow */}
-        <div className="flex items-center space-x-12 mb-8">
-          <div className="flex flex-col items-center">
-            <div className="h-12 w-12 rounded-xl bg-[#15191C] border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/10 animate-pulse">
-              <Radio className="h-6 w-6 text-sky-400" />
-            </div>
-            <span className="text-[10px] font-mono text-[#9FA6A8] mt-2">Network Traffic Flow</span>
+        {/* Layer 1: Ingress & Verification */}
+        <div className="micro-surface rounded-xl p-4 space-y-3 relative group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold">STAGE 01</span>
+            <Radio className="h-4 w-4 text-blue-500 animate-pulse" />
           </div>
-
-          <div className="h-[2px] w-24 bg-gradient-to-r from-sky-500/40 via-sky-400 to-indigo-500/40 relative">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-sky-400 animate-ping" />
+          <div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 font-sans">Network Ingress</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">TCP/UDP Flow Stream</div>
           </div>
-
-          <div className="flex flex-col items-center">
-            <div className="h-14 w-14 rounded-2xl bg-[#15191C] border border-indigo-500/40 flex items-center justify-center shadow-xl shadow-indigo-500/20">
-              <Cpu className="h-7 w-7 text-indigo-400" />
-            </div>
-            <span className="text-[10px] font-mono text-indigo-300 mt-2 font-semibold">64-Unit Keras LSTM Engine</span>
-          </div>
-
-          <div className="h-[2px] w-24 bg-gradient-to-r from-indigo-500/40 via-emerald-400 to-emerald-500/40 relative">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-          </div>
-
-          <div className="flex flex-col items-center">
-            <div className="h-12 w-12 rounded-xl bg-[#15191C] border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
-              <Lock className="h-6 w-6 text-emerald-400" />
-            </div>
-            <span className="text-[10px] font-mono text-[#9FA6A8] mt-2">Zero Trust Verification</span>
+          <div className="p-2 rounded bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-400">
+            Rate: <strong>1,420 pkts/s</strong>
           </div>
         </div>
 
-        {/* Central Trust Score Meter */}
-        <div className="w-full bg-[#111417] border border-[#252A2E] rounded-xl p-4 flex items-center justify-between shadow-2xl">
-          <div className="flex items-center space-x-3">
-            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-ping" />
-            <div>
-              <div className="text-xs font-semibold text-[#F3F4F1]">Continuous Zero Trust Analytics</div>
-              <div className="text-[10px] text-[#9FA6A8] font-mono">HS256 JWT Token Verified • Bcrypt 12-Round Password Vault • RBAC Enforced</div>
-            </div>
+        {/* Layer 2: Zero Trust Policy Gateway */}
+        <div className="micro-surface rounded-xl p-4 space-y-3 border-blue-500/30 bg-blue-50/20 dark:bg-blue-950/20">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-bold">STAGE 02</span>
+            <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-[10px] text-[#9FA6A8] uppercase tracking-wider font-mono">AI Prediction Confidence</div>
-              <div className="text-sm font-bold font-mono text-sky-400">97.42%</div>
-            </div>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              TRUST VERIFIED
-            </span>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 font-sans">Zero Trust Gateway</div>
+            <div className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">JWT HMAC-SHA256</div>
+          </div>
+          <div className="p-2 rounded bg-blue-100/60 dark:bg-blue-900/30 text-[10px] text-blue-800 dark:text-blue-300 font-bold">
+            Status: <strong>Never Trust, Verify</strong>
+          </div>
+        </div>
+
+        {/* Layer 3: LSTM AI Classification */}
+        <div className="micro-surface rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold">STAGE 03</span>
+            <Cpu className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 font-sans">LSTM Intelligence</div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">64-Unit Recurrent Model</div>
+          </div>
+          <div className="p-2 rounded bg-emerald-50 dark:bg-emerald-950/40 text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">
+            Accuracy: <strong>97.42% Empirical</strong>
           </div>
         </div>
 
       </div>
 
-      {/* Floating Status Pills */}
-      <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-[#111417]/80 border border-[#252A2E] flex items-center space-x-2">
-        <Activity className="h-3.5 w-3.5 text-sky-400 animate-spin" />
-        <span className="text-[10px] font-mono text-[#9FA6A8]">Real-time Traffic Stream: 1,284 Flows/sec</span>
-      </div>
+      {/* Floating Active Threat Telemetry Card */}
+      <div className="micro-surface rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
+        <div className="flex items-center space-x-3">
+          <div className="h-9 w-9 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shrink-0">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 font-sans">Continuous Spatial Threat Sentinel</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              Zero Trust RBAC Enforcement • Bcrypt Hash Vault • SQLite Audit Log
+            </div>
+          </div>
+        </div>
 
-      <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-lg bg-[#111417]/80 border border-[#252A2E] flex items-center space-x-2">
-        <Zap className="h-3.5 w-3.5 text-amber-400" />
-        <span className="text-[10px] font-mono text-[#9FA6A8]">JNNCE Shimoga • Batch No. 34</span>
+        <div className="flex items-center space-x-3 shrink-0">
+          <div className="text-right">
+            <div className="text-[9px] uppercase text-slate-400 font-bold">Neural Confidence</div>
+            <div className="text-sm font-bold text-blue-600 dark:text-blue-400">98.4%</div>
+          </div>
+          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            FLOW VERIFIED
+          </span>
+        </div>
       </div>
 
     </div>
   );
 };
+

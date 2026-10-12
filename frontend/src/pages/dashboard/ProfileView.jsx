@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Key, Eye, EyeOff, CheckCircle2, XCircle, User as UserIcon } from 'lucide-react';
+import { Shield, Key, Eye, EyeOff, CheckCircle2, XCircle, User as UserIcon, Lock, Sparkles, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const ProfileView = ({ onClose }) => {
@@ -25,7 +25,7 @@ export const ProfileView = ({ onClose }) => {
     setError('');
 
     if (!hasMinLength || !hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
-      setError('New password does not meet all security complexity requirements.');
+      setError('New password does not satisfy all complexity requirements.');
       return;
     }
 
@@ -34,93 +34,105 @@ export const ProfileView = ({ onClose }) => {
       return;
     }
 
-    setMessage('Password updated successfully in Zero Trust security database.');
+    setMessage('Security credentials updated successfully in Zero Trust database.');
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
   };
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-6 max-w-3xl mx-auto animate-fade-in pb-12">
       
-      {/* Header */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="h-10 w-10 rounded-xl bg-blue-50 text-[#1769E0] flex items-center justify-center font-bold">
+      {/* Spatial Header Stage */}
+      <div className="floating-surface rounded-2xl p-6 sm:p-7 shadow-spatial-md flex items-center justify-between gap-4 relative overflow-hidden">
+        <div className="flex items-center space-x-3.5 relative z-10">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center text-primary shadow-spatial-sm">
             <UserIcon className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#172033]">User Profile & Security Settings</h1>
-            <p className="text-xs text-[#475569]">Manage authentication credentials and view role permissions.</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">User Security & Profile</h1>
+            <p className="text-xs text-muted-foreground">Manage authentication credentials and view role permissions.</p>
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="px-4 py-2 text-xs font-semibold text-[#475569] hover:text-[#172033] bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl"
+          className="relative z-10 px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground micro-surface rounded-xl transition-colors tactile-btn"
         >
           Close Settings
         </button>
       </div>
 
       {/* User Information Summary */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-[#172033] font-mono uppercase mb-4">Account Metadata</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono text-[#475569]">
-          <div>
-            <span className="block text-[10px]">USERNAME</span>
-            <span className="text-[#172033] font-bold">{user?.username || 'admin'}</span>
+      <div className="floating-surface rounded-2xl p-6 shadow-spatial-md space-y-4">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3">
+          <div className="flex items-center space-x-2">
+            <Shield className="w-4 h-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Identity & Role Claims</h2>
           </div>
-          <div>
-            <span className="block text-[10px]">ASSIGNED RBAC ROLE</span>
-            <span className="text-[#1769E0] font-bold">[{role.toUpperCase()}]</span>
+          <span className="text-[10px] font-mono text-muted-foreground uppercase">RFC 7519 Compliant</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs font-mono">
+          <div className="p-3.5 rounded-2xl micro-surface shadow-spatial-sm">
+            <span className="block text-[10px] text-muted-foreground uppercase font-semibold mb-1">Active Principal</span>
+            <span className="text-foreground font-bold text-sm">{user?.username || 'admin'}</span>
           </div>
-          <div>
-            <span className="block text-[10px]">AUTHENTICATION TIER</span>
-            <span className="text-emerald-600 font-bold">PyJWT Signed HMAC-SHA256</span>
+          <div className="p-3.5 rounded-2xl micro-surface shadow-spatial-sm border-primary/20 bg-primary/5">
+            <span className="block text-[10px] text-muted-foreground uppercase font-semibold mb-1">RBAC Role Authority</span>
+            <span className="text-primary font-bold text-sm">[{role.toUpperCase()}]</span>
+          </div>
+          <div className="p-3.5 rounded-2xl micro-surface shadow-spatial-sm border-emerald-500/20 bg-emerald-500/5">
+            <span className="block text-[10px] text-muted-foreground uppercase font-semibold mb-1">Token Integrity</span>
+            <span className="text-emerald-500 font-bold text-sm">HS256 Verified</span>
           </div>
         </div>
       </div>
 
       {/* Change Password Form */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm space-y-6">
-        <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-          <Key className="h-5 w-5 text-[#1769E0]" />
-          <h2 className="text-base font-bold text-[#172033]">Change Password</h2>
+      <div className="floating-surface rounded-2xl p-6 shadow-spatial-md space-y-6">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3">
+          <div className="flex items-center space-x-2">
+            <Key className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-bold text-foreground">Rotate Security Credentials</h2>
+          </div>
+          <span className="text-[10px] font-mono text-muted-foreground uppercase">Bcrypt Hash</span>
         </div>
 
         {message && (
-          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono">
-            ✓ {message}
+          <div className="p-3.5 rounded-2xl micro-surface border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-mono shadow-spatial-sm flex items-center space-x-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>{message}</span>
           </div>
         )}
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-mono">
-            ⚠ {error}
+          <div className="p-3.5 rounded-2xl micro-surface border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-mono shadow-spatial-sm flex items-center space-x-2">
+            <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handlePasswordChange} className="space-y-4 text-xs">
           
           <div>
-            <label className="block text-[#475569] font-medium mb-1">Current Password</label>
+            <label className="block text-muted-foreground font-semibold mb-1.5 text-[11px] uppercase tracking-wider font-mono">Current Password</label>
             <input
               type={showPassword ? "text" : "password"}
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-lg p-2.5 text-[#172033] outline-none"
+              className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground outline-none font-mono focus:border-primary transition-all shadow-inner"
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[#475569] font-medium">New Password</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-muted-foreground font-semibold text-[11px] uppercase tracking-wider font-mono">New Password</label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-[#1769E0] flex items-center space-x-1 text-[11px]"
+                className="text-primary hover:text-primary-hover flex items-center space-x-1 text-[11px] font-mono"
               >
                 {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 <span>{showPassword ? 'Hide' : 'Show'}</span>
@@ -131,61 +143,61 @@ export const ProfileView = ({ onClose }) => {
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-lg p-2.5 text-[#172033] outline-none"
+              className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground outline-none font-mono focus:border-primary transition-all shadow-inner"
             />
           </div>
 
           <div>
-            <label className="block text-[#475569] font-medium mb-1">Confirm New Password</label>
+            <label className="block text-muted-foreground font-semibold mb-1.5 text-[11px] uppercase tracking-wider font-mono">Confirm New Password</label>
             <input
               type={showPassword ? "text" : "password"}
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-[#F5F7FA] border border-[#E2E8F0] rounded-lg p-2.5 text-[#172033] outline-none"
+              className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground outline-none font-mono focus:border-primary transition-all shadow-inner"
             />
           </div>
 
           {/* Password Complexity Checklist */}
-          <div className="bg-[#F5F7FA] border border-[#E2E8F0] rounded-xl p-4 space-y-1.5 font-mono text-[11px]">
-            <div className="text-[#172033] font-bold font-sans text-xs mb-2">Password Complexity Requirements:</div>
+          <div className="micro-surface rounded-2xl p-4 space-y-2 font-mono text-[11px] shadow-spatial-sm">
+            <div className="text-foreground font-bold font-sans text-xs mb-2">Password Complexity Requirements:</div>
             
             <div className="flex items-center space-x-2">
-              {hasMinLength ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={hasMinLength ? 'text-emerald-700' : 'text-[#475569]'}>At least 8 characters long</span>
+              {hasMinLength ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={hasMinLength ? 'text-emerald-500 font-semibold' : 'text-muted-foreground'}>At least 8 characters long</span>
             </div>
 
             <div className="flex items-center space-x-2">
-              {hasUppercase ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={hasUppercase ? 'text-emerald-700' : 'text-[#475569]'}>Contains uppercase letter (A-Z)</span>
+              {hasUppercase ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={hasUppercase ? 'text-emerald-500 font-semibold' : 'text-muted-foreground'}>Contains uppercase letter (A-Z)</span>
             </div>
 
             <div className="flex items-center space-x-2">
-              {hasLowercase ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={hasLowercase ? 'text-emerald-700' : 'text-[#475569]'}>Contains lowercase letter (a-z)</span>
+              {hasLowercase ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={hasLowercase ? 'text-emerald-500 font-semibold' : 'text-muted-foreground'}>Contains lowercase letter (a-z)</span>
             </div>
 
             <div className="flex items-center space-x-2">
-              {hasNumber ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={hasNumber ? 'text-emerald-700' : 'text-[#475569]'}>Contains number (0-9)</span>
+              {hasNumber ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={hasNumber ? 'text-emerald-500 font-semibold' : 'text-muted-foreground'}>Contains numeric digit (0-9)</span>
             </div>
 
             <div className="flex items-center space-x-2">
-              {hasSpecial ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={hasSpecial ? 'text-emerald-700' : 'text-[#475569]'}>Contains special character (!@#$%^&*)</span>
+              {hasSpecial ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={hasSpecial ? 'text-emerald-500 font-semibold' : 'text-muted-foreground'}>Contains special symbol (!@#$%^&*)</span>
             </div>
 
-            <div className="flex items-center space-x-2 pt-1 border-t border-slate-200">
-              {isMatching ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <XCircle className="h-3.5 w-3.5 text-slate-300" />}
-              <span className={isMatching ? 'text-emerald-700 font-bold' : 'text-[#475569]'}>Passwords match</span>
+            <div className="flex items-center space-x-2 pt-2 border-t border-border/40">
+              {isMatching ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+              <span className={isMatching ? 'text-emerald-500 font-bold' : 'text-muted-foreground'}>Passwords match</span>
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-[#1769E0] hover:bg-[#0F3B68] text-white font-semibold text-xs shadow-md transition-all font-sans"
+            className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold text-xs shadow-spatial-md transition-all tactile-btn"
           >
-            Update Security Password
+            Update Security Credentials
           </button>
 
         </form>
@@ -194,3 +206,4 @@ export const ProfileView = ({ onClose }) => {
     </div>
   );
 };
+

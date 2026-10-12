@@ -1,0 +1,62 @@
+{
+  "run_id": "run_20261010_212742_eb1522",
+  "dataset_name": "unsw_nb15_raw.csv",
+  "dataset_type": "UNSW-NB15",
+  "total_dataset_rows": 50000,
+  "training_rows": 25000,
+  "random_seed": 42,
+  "sequence_length": 1,
+  "epochs": 5,
+  "batch_size": 64,
+  "learning_rate": 0.001,
+  "accuracy": 1.0,
+  "loss": 0.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1_score": 1.0,
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "accuracy": 1.0,
+      "loss": 0.0009,
+      "val_accuracy": 1.0,
+      "val_loss": 0.0009,
+      "delta_w": 13.8727
+    },
+    {
+      "epoch": 2,
+      "accuracy": 1.0,
+      "loss": 0.0002,
+      "val_accuracy": 1.0,
+      "val_loss": 0.0002,
+      "delta_w": 0.995
+    },
+    {
+      "epoch": 3,
+      "accuracy": 1.0,
+      "loss": 0.0001,
+      "val_accuracy": 1.0,
+      "val_loss": 0.0001,
+      "delta_w": 1.4034
+    },
+    {
+      "epoch": 4,
+      "accuracy": 1.0,
+      "loss": 0.0,
+      "val_accuracy": 1.0,
+      "val_loss": 0.0,
+      "delta_w": 0.5169
+    },
+    {
+      "epoch": 5,
+      "accuracy": 1.0,
+      "loss": 0.0,
+      "val_accuracy": 1.0,
+      "val_loss": 0.0,
+      "delta_w": 0.3179
+    }
+  ],
+  "artifact_dir": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\models\\unsw_nb15\\run_20261010_212742_eb1522",
+  "saved_model_path": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\models\\unsw_nb15\\run_20261010_212742_eb1522\\model.joblib",
+  "trained_at": "2026-10-10 15:57:53 UTC"
+}

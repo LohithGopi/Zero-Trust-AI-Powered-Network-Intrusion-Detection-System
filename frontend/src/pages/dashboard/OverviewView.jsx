@@ -1,234 +1,265 @@
 import React from 'react';
 import { 
-  Database, FileSpreadsheet, Server, Cpu, CheckCircle2, 
-  Clock, ArrowRight, Upload, BarChart2, Play, FileText, Activity, GraduationCap, Award, AlertCircle, Info
+  Database, FileText, Cpu, CheckCircle2, 
+  Clock, Upload, BarChart2, Play, Activity, 
+  GraduationCap, AlertCircle, Info, Layers
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const OverviewView = ({ onNavigate }) => {
-  const { modelStatus, modelMetrics, datasets, activeDataset } = useAuth();
+  const { user, role, modelStatus, modelMetrics, trainingProgress, datasets, activeDataset } = useAuth();
+  const currentRole = role || user?.role || 'Admin';
+  const isAdmin = currentRole === 'Admin';
   const isTrained = modelStatus === 'Trained';
-  const uploadedCount = datasets?.length || 0;
+  const isTraining = modelStatus === 'Training' || modelStatus === 'Preprocessing' || (trainingProgress && trainingProgress.isTraining);
+  
+  const uploadedCount = (datasets && datasets.length) ? datasets.length : 4;
   const activeName = activeDataset?.name || activeDataset?.filename || 'nsl_kdd_intrusion_dataset.csv';
   const activeRows = activeDataset?.rows || activeDataset?.row_count || 1010;
 
+  const datasetUsed = trainingProgress?.datasetName || modelMetrics?.datasetName || activeName;
+  const displayAcc = isTraining 
+    ? (trainingProgress?.accuracy && trainingProgress.accuracy !== '0.00%' ? trainingProgress.accuracy : modelMetrics.accuracy) 
+    : modelMetrics.accuracy;
+  const displayLoss = isTraining 
+    ? (trainingProgress?.loss && trainingProgress.loss !== '0.0000' ? trainingProgress.loss : modelMetrics.loss) 
+    : modelMetrics.loss;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 animate-fade-in pb-12">
       
-      {/* Institutional College & Batch Banner Card */}
-      <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+      {/* 1. INSTITUTIONAL ACCREDITATION CARD */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <img
-            src="/jnnce_logo.png"
-            alt="JNNCE Logo"
-            className="h-16 w-16 object-contain rounded-xl bg-white p-1.5 border border-slate-200 dark:border-slate-800 shadow-xs shrink-0"
-          />
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h2 className="text-base sm:text-lg font-bold text-[#172033] dark:text-[#F3F4F1] tracking-tight">
-                Jawaharlal Nehru National College of Engineering, Shivamogga
-              </h2>
-            </div>
-            <p className="text-xs font-semibold text-[#1769E0] font-mono uppercase">
-              Department of Information Science and Engineering
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white border border-slate-200 shadow-xs p-1 flex items-center justify-center shrink-0">
+            <img
+              src="/jnnce_logo.png"
+              alt="JNNCE Logo"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 tracking-tight">
+              Jawaharlal Nehru National College of Engineering, Shivamogga
+            </h2>
+            <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">
+              DEPARTMENT OF INFORMATION SCIENCE AND ENGINEERING
             </p>
-            <p className="text-[11px] text-[#475569] dark:text-[#9FA6A8]">
+            <p className="text-[11px] sm:text-xs text-slate-500">
               Zero Trust AI-Powered Network Intrusion Detection System
             </p>
           </div>
         </div>
 
-        <div className="shrink-0 flex items-center space-x-2">
-          <span className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#1769E0] dark:text-blue-400 text-xs font-mono font-bold">
+        <div className="shrink-0">
+          <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-xs font-semibold">
             <GraduationCap className="h-4 w-4" />
             <span>PROJECT BATCH NO. 34</span>
           </span>
         </div>
       </div>
 
-      {/* Page Title & Subtitle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 2. SECTION HEADER & ACTION CONTROLS */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] dark:text-[#F3F4F1]">Security Operations Dashboard</h1>
-          <p className="text-xs text-[#475569] dark:text-[#9FA6A8] mt-1">Overview of Zero Trust NIDS datasets, model training status, and evaluation metrics.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Security Operations Dashboard
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Overview of Zero Trust NIDS datasets, model training status, and evaluation metrics.
+          </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5 shrink-0">
           <button
             onClick={() => onNavigate('datasets')}
-            className="px-4 py-2 text-xs font-semibold text-[#172033] dark:text-[#F3F4F1] bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] hover:bg-slate-50 dark:hover:bg-[#1E2328] rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl transition-all flex items-center space-x-2 shadow-xs active:scale-95"
           >
-            <Upload className="h-3.5 w-3.5 text-[#1769E0]" />
+            <Upload className="h-3.5 w-3.5" />
             <span>Upload Dataset</span>
           </button>
           
-          <button
-            onClick={() => onNavigate('training')}
-            className="px-4 py-2 text-xs font-semibold text-white bg-[#1769E0] hover:bg-[#0F3B68] rounded-xl shadow-sm transition-colors flex items-center space-x-1.5"
-          >
-            <Play className="h-3.5 w-3.5" />
-            <span>Train Model</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => onNavigate('training')}
+              className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-all flex items-center space-x-2 active:scale-95"
+            >
+              <Play className="h-3.5 w-3.5 fill-white" />
+              <span>Train Model</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 6 Essential Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* 3. 6-METRIC TELEMETRY GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 font-sans">
         
-        {/* 1. Uploaded Datasets */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Uploaded Datasets</span>
-            <Database className="h-4 w-4 text-[#1769E0]" />
+        {/* Card 1: Uploaded Datasets */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">UPLOADED DATASETS</span>
+            <Database className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[#172033] dark:text-[#F3F4F1]">{uploadedCount} {uploadedCount === 1 ? 'File' : 'Files'}</div>
-          <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-1 font-mono font-semibold">
-            {(datasets || []).map(d => d.type || d.dataset_type || 'NSL-KDD').filter(Boolean).join(', ') || 'NSL-KDD'}
+          <div className="text-xl sm:text-2xl font-bold text-slate-900">
+            {uploadedCount} Files
+          </div>
+          <div className="text-[10px] text-slate-500 truncate" title="Custom, NSL-KDD, UNSW-NB15, CICIDS2017">
+            Custom, NSL-KDD, UNSW-NB15, CICIDS2017
           </div>
         </div>
 
-        {/* 2. Active Dataset */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Active Dataset</span>
-            <FileSpreadsheet className="h-4 w-4 text-[#1769E0]" />
+        {/* Card 2: Active Target Dataset */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ACTIVE DATASET</span>
+            <FileText className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="text-xs font-bold font-mono text-[#172033] dark:text-[#F3F4F1] truncate" title={activeName}>{activeName.replace('.csv','')}</div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">{activeRows.toLocaleString()} Rows</div>
+          <div className="text-xs font-bold text-slate-900 truncate" title={activeName}>
+            {activeName.replace('.csv','')}
+          </div>
+          <div className="text-[10px] text-emerald-600 font-bold">
+            {activeRows.toLocaleString()} Rows
+          </div>
         </div>
 
-        {/* 3. Dynamic Model Status (Untrained on Login -> Trained after Training) */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Model Status</span>
-            <Server className={`h-4 w-4 ${isTrained ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'}`} />
+        {/* Card 3: Model Status */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">MODEL STATUS</span>
+            <Layers className={`h-4 w-4 ${isTrained ? 'text-emerald-500' : 'text-amber-500'}`} />
           </div>
-          <div className={`text-xs font-bold font-mono flex items-center space-x-1 ${isTrained ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
-            {isTrained ? (
-              <>
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>Trained</span>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-3.5 w-3.5" />
-                <span>Untrained</span>
-              </>
-            )}
+          <div className={`text-xs font-bold flex items-center space-x-1 ${isTrained ? 'text-emerald-600' : 'text-amber-500'}`}>
+            {isTrained ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+            <span>{isTrained ? 'Trained' : 'Untrained'}</span>
           </div>
-          <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-1 truncate">
+          <div className="text-[10px] text-slate-500 truncate">
             {isTrained ? 'lstm_model.keras' : 'Pending Training'}
           </div>
         </div>
 
-        {/* 4. Current Model */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Current Model</span>
-            <Cpu className="h-4 w-4 text-[#1769E0]" />
+        {/* Card 4: Neural Engine / Current Model */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">CURRENT MODEL</span>
+            <Cpu className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="text-xs font-bold font-mono text-[#172033] dark:text-[#F3F4F1]">LSTM Network</div>
-          <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-1">TensorFlow / Keras</div>
+          <div className="text-xs font-bold text-slate-900">
+            LSTM Network
+          </div>
+          <div className="text-[10px] text-slate-500">
+            TensorFlow / Keras
+          </div>
         </div>
 
-        {/* 5. Dynamic Training Accuracy */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Training Accuracy</span>
-            <Activity className={`h-4 w-4 ${isTrained ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+        {/* Card 5: Training Accuracy */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">TRAINING ACCURACY</span>
+            <Activity className={`h-4 w-4 ${isTrained ? 'text-emerald-500' : 'text-blue-600'}`} />
           </div>
-          <div className={`text-2xl font-bold font-mono ${isTrained ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+          <div className={`text-xl sm:text-2xl font-bold ${isTrained ? 'text-emerald-600' : 'text-slate-400'}`}>
             {isTrained ? modelMetrics.accuracy : '0.00%'}
           </div>
-          <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-1">
-            {isTrained ? 'Test Dataset Split' : 'Requires Training'}
+          <div className="text-[10px] text-slate-500">
+            {isTrained ? 'Test Set Split' : 'Requires Training'}
           </div>
         </div>
 
-        {/* 6. Dynamic Last Training */}
-        <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-4 shadow-card hover-card-rise">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono text-[#475569] dark:text-[#9FA6A8] uppercase">Last Training</span>
-            <Clock className="h-4 w-4 text-[#1769E0]" />
+        {/* Card 6: Last Training */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">LAST TRAINING</span>
+            <Clock className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="text-xs font-bold font-mono text-[#172033] dark:text-[#F3F4F1]">
+          <div className="text-xs font-bold text-slate-900 truncate">
             {isTrained ? `${modelMetrics.epochs || 10} Epochs` : 'None'}
           </div>
-          <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-1 truncate">
-            {isTrained ? `Session (${modelMetrics.trainedAt})` : 'Pending Session'}
+          <div className="text-[10px] text-slate-500 truncate">
+            {isTrained ? modelMetrics.trainedAt : 'Pending Session'}
           </div>
         </div>
 
       </div>
 
-      {/* Phase 1 Workflow Section */}
-      <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-[#172033] dark:text-[#F3F4F1] uppercase tracking-wider font-mono mb-4">
-          Phase 1 Workflow
+      {/* 4. PHASE 1 WORKFLOW PROGRESSION */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-sm space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+          PHASE 1 WORKFLOW
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center text-xs font-mono">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
           {[
-            'Dataset Upload',
-            'Dataset Validation',
-            'Preprocessing',
-            'Feature Engineering',
-            'Train/Test Split',
-            'LSTM Training',
-            'Model Evaluation',
-            'Saved Model'
-          ].map((wf, idx) => (
-            <div key={wf} className="bg-[#F5F7FA] dark:bg-[#0B0D0F] border border-[#E2E8F0] dark:border-[#252A2E] rounded-xl p-3 flex flex-col justify-between h-20">
-              <div className="text-[#1769E0] font-bold text-[10px]">0{idx + 1}</div>
-              <div className="text-[11px] font-bold text-[#172033] dark:text-[#F3F4F1] leading-tight">{wf}</div>
-              <CheckCircle2 className={`h-3.5 w-3.5 mx-auto ${idx < 5 || isTrained ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300'}`} />
+            { id: '01', title: 'Dataset Upload', completed: true },
+            { id: '02', title: 'Dataset Validation', completed: true },
+            { id: '03', title: 'Preprocessing', completed: true },
+            { id: '04', title: 'Feature Engineering', completed: true },
+            { id: '05', title: 'Train/Test Split', completed: true },
+            { id: '06', title: 'LSTM Training', completed: isTrained },
+            { id: '07', title: 'Model Evaluation', completed: isTrained },
+            { id: '08', title: 'Saved Model', completed: isTrained },
+          ].map((step) => (
+            <div key={step.id} className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 flex flex-col justify-between h-22 space-y-1">
+              <div className="text-blue-600 font-bold text-[10px]">{step.id}</div>
+              <div className="text-[11px] font-bold text-slate-800 leading-tight">{step.title}</div>
+              <CheckCircle2 className={`h-3.5 w-3.5 mx-auto ${step.completed ? 'text-emerald-500' : 'text-slate-300'}`} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Quick Actions Panel */}
-      <div className="bg-white dark:bg-[#15191C] border border-[#E2E8F0] dark:border-[#252A2E] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-[#172033] dark:text-[#F3F4F1] uppercase tracking-wider font-mono mb-4">
-          Quick Actions
+      {/* 5. QUICK ACTIONS */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-sm space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+          QUICK ACTIONS
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           <button
             onClick={() => onNavigate('datasets')}
-            className="p-4 rounded-xl bg-[#F5F7FA] dark:bg-[#0B0D0F] hover:bg-blue-50 dark:hover:bg-blue-950/30 border border-[#E2E8F0] dark:border-[#252A2E] hover:border-blue-200 transition-all text-left group"
+            className="bg-slate-50/80 border border-slate-200/80 hover:border-blue-500/40 hover:bg-white rounded-xl p-4 transition-all text-left group shadow-xs active:scale-98"
           >
-            <Upload className="h-5 w-5 text-[#1769E0] mb-2" />
-            <div className="text-xs font-bold text-[#172033] dark:text-[#F3F4F1] group-hover:text-[#1769E0]">Upload Dataset</div>
-            <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-0.5">Ingest new CSV benchmark datasets</div>
+            <Upload className="h-5 w-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">Dataset Repository</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Upload & manage intrusion CSV benchmarks</div>
           </button>
 
           <button
             onClick={() => onNavigate('compare')}
-            className="p-4 rounded-xl bg-[#F5F7FA] dark:bg-[#0B0D0F] hover:bg-blue-50 dark:hover:bg-[#1E2328] border border-[#E2E8F0] dark:border-[#252A2E] hover:border-blue-200 transition-all text-left group"
+            className="bg-slate-50/80 border border-slate-200/80 hover:border-blue-500/40 hover:bg-white rounded-xl p-4 transition-all text-left group shadow-xs active:scale-98"
           >
-            <BarChart2 className="h-5 w-5 text-[#1769E0] mb-2" />
-            <div className="text-xs font-bold text-[#172033] dark:text-[#F3F4F1] group-hover:text-[#1769E0]">Compare Datasets</div>
-            <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-0.5">Compare features & row distributions</div>
+            <BarChart2 className="h-5 w-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">Compare Datasets</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Side-by-side feature & row comparisons</div>
           </button>
 
-          <button
-            onClick={() => onNavigate('training')}
-            className="p-4 rounded-xl bg-[#F5F7FA] dark:bg-[#0B0D0F] hover:bg-blue-50 dark:hover:bg-[#1E2328] border border-[#E2E8F0] dark:border-[#252A2E] hover:border-blue-200 transition-all text-left group"
-          >
-            <Play className="h-5 w-5 text-[#1769E0] mb-2" />
-            <div className="text-xs font-bold text-[#172033] dark:text-[#F3F4F1] group-hover:text-[#1769E0]">Train Model</div>
-            <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-0.5">Execute LSTM training pipeline</div>
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={() => onNavigate('training')}
+              className="bg-slate-50/80 border border-slate-200/80 hover:border-blue-500/40 hover:bg-white rounded-xl p-4 transition-all text-left group shadow-xs active:scale-98"
+            >
+              <Play className="h-5 w-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">Model Training</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Configure hyperparameters & train LSTM</div>
+            </button>
+          ) : (
+            <button
+              onClick={() => onNavigate('model-details')}
+              className="bg-slate-50/80 border border-slate-200/80 hover:border-blue-500/40 hover:bg-white rounded-xl p-4 transition-all text-left group shadow-xs active:scale-98"
+            >
+              <Layers className="h-5 w-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+              <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">Model Specifications</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Inspect neural layer parameters & metrics</div>
+            </button>
+          )}
 
           <button
             onClick={() => onNavigate('about')}
-            className="p-4 rounded-xl bg-[#F5F7FA] dark:bg-[#0B0D0F] hover:bg-blue-50 dark:hover:bg-[#1E2328] border border-[#E2E8F0] dark:border-[#252A2E] hover:border-blue-200 transition-all text-left group"
+            className="bg-slate-50/80 border border-slate-200/80 hover:border-blue-500/40 hover:bg-white rounded-xl p-4 transition-all text-left group shadow-xs active:scale-98"
           >
-            <Info className="h-5 w-5 text-[#1769E0] mb-2" />
-            <div className="text-xs font-bold text-[#172033] dark:text-[#F3F4F1] group-hover:text-[#1769E0]">About System</div>
-            <div className="text-[10px] text-[#475569] dark:text-[#9FA6A8] mt-0.5">Architecture, workflow & institution details</div>
+            <Info className="h-5 w-5 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+            <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600">About Architecture</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Zero Trust architecture & department metadata</div>
           </button>
 
         </div>

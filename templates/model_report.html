@@ -8,9 +8,11 @@
         <h2 class="fw-bold text-dark mb-1">Model Evaluation & Verification Report</h2>
         <p class="text-secondary fs-6 mb-0">Quantitative analysis of trained LSTM model performance on test partition</p>
     </div>
+    {% if user.role == 'Admin' %}
     <a href="{{ url_for('model.train_page') }}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-repeat me-1"></i> Retrain Model
     </a>
+    {% endif %}
 </div>
 
 {% if report %}

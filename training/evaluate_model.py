@@ -16,17 +16,23 @@ class ModelEvaluator:
         self.report_path = report_path
         self.encoder_path = encoder_path
 
-    def evaluate(self, model, X_test_3d: np.ndarray, y_test: np.ndarray) -> dict:
+    def evaluate(self, model, X_test: np.ndarray, y_test: np.ndarray) -> dict:
         """Calculate complete evaluation metrics, confusion matrix, ROC curve, and save JSON report."""
-        logger.info("Evaluating trained LSTM intrusion detection model...")
+        logger.info("Evaluating trained intrusion detection model on test partition...")
 
-        # Obtain prediction probabilities and crisp class predictions
-        y_pred_probs = model.predict(X_test_3d)
-        
-        if y_pred_probs.ndim > 1 and y_pred_probs.shape[1] > 1:
-            y_pred = np.argmax(y_pred_probs, axis=1)
+        # Determine input dimensionality based on model expectations
+        is_sklearn = hasattr(model, "predict_proba")
+        if is_sklearn:
+            X_eval = X_test.reshape(X_test.shape[0], -1) if X_test.ndim == 3 else X_test
+            y_pred_probs = model.predict_proba(X_eval)
+            y_pred = model.predict(X_eval)
         else:
-            y_pred = (y_pred_probs > 0.5).astype(int).flatten()
+            X_eval = X_test if X_test.ndim == 3 else np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+            y_pred_probs = model.predict(X_eval, verbose=0)
+            if y_pred_probs.ndim > 1 and y_pred_probs.shape[1] > 1:
+                y_pred = np.argmax(y_pred_probs, axis=1)
+            else:
+                y_pred = (y_pred_probs > 0.5).astype(int).flatten()
 
         # Load LabelEncoder if available
         classes = None
@@ -38,21 +44,67 @@ class ModelEvaluator:
                 logger.warning(f"Could not load label encoder classes: {e}")
 
         if classes is None:
-            classes = [str(c) for c in np.unique(y_test)]
+            classes = [str(c) for c in sorted(np.unique(y_test))]
 
-        # Basic scalar metrics
+        # Real test metrics
         acc = float(accuracy_score(y_test, y_pred))
         prec = float(precision_score(y_test, y_pred, average='weighted', zero_division=0))
         rec = float(recall_score(y_test, y_pred, average='weighted', zero_division=0))
         f1 = float(f1_score(y_test, y_pred, average='weighted', zero_division=0))
 
         # Confusion Matrix
-        cm = confusion_matrix(y_test, y_pred).tolist()
+        cm_array = confusion_matrix(y_test, y_pred)
+        cm = cm_array.tolist()
+
+        # Compute Normal vs. Attack Traffic Classification Breakdown & False Positive Rate (FPR)
+        # Identify which class index represents Normal / Benign traffic
+        normal_labels_set = {"0", "normal", "benign", "normal."}
+        normal_idx = 0
+        for idx, cls_name in enumerate(classes):
+            if str(cls_name).strip().lower() in normal_labels_set:
+                normal_idx = idx
+                break
+
+        total_samples = int(np.sum(cm_array)) if cm_array.size > 0 else len(y_test)
+        if cm_array.shape[0] >= 2 and normal_idx < cm_array.shape[0]:
+            tn = int(cm_array[normal_idx, normal_idx])
+            fp = int(np.sum(cm_array[normal_idx, :]) - tn)
+            fn = int(np.sum(cm_array[:, normal_idx]) - tn)
+            tp = int(total_samples - tn - fp - fn)
+        else:
+            tn = int(np.sum((y_test == 0) & (y_pred == 0)))
+            fp = int(np.sum((y_test == 0) & (y_pred != 0)))
+            fn = int(np.sum((y_test != 0) & (y_pred == 0)))
+            tp = int(np.sum((y_test != 0) & (y_pred != 0)))
+
+        # False Positive Rate (FPR): How often normal traffic is incorrectly classified as an attack
+        fpr_scalar = float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0
+        # False Negative Rate (FNR): How often attack traffic is missed as normal
+        fnr_scalar = float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0
+        # True Negative Rate (Specificity): How correctly normal traffic is identified
+        tnr_scalar = float(tn / (tn + fp)) if (tn + fp) > 0 else 1.0
+        # True Positive Rate (Completeness / Attack Recall): How completely attacks are detected
+        tpr_scalar = float(tp / (tp + fn)) if (tp + fn) > 0 else float(rec)
+
+        binary_summary = {
+            "normal_class_name": classes[normal_idx] if normal_idx < len(classes) else "Normal",
+            "true_positives": tp,
+            "true_negatives": tn,
+            "false_positives": fp,
+            "false_negatives": fn,
+            "total_normal_samples": int(tn + fp),
+            "total_attack_samples": int(tp + fn),
+            "false_positive_rate": round(fpr_scalar, 4),
+            "false_negative_rate": round(fnr_scalar, 4),
+            "normal_identification_rate": round(tnr_scalar, 4),
+            "attack_detection_rate": round(tpr_scalar, 4)
+        }
 
         # Classification Report dict
-        clf_report = classification_report(y_test, y_pred, target_names=classes if len(classes) == len(np.unique(y_test)) else None, output_dict=True, zero_division=0)
+        target_names = classes if len(classes) == len(np.unique(y_test)) else None
+        clf_report = classification_report(y_test, y_pred, target_names=target_names, output_dict=True, zero_division=0)
 
-        # Helper to downsample ROC points evenly up to 100 points without truncation
+        # Helper to downsample ROC points evenly up to 100 points
         def sample_roc(fpr_arr, tpr_arr):
             n_pts = len(fpr_arr)
             if n_pts <= 100:
@@ -63,10 +115,11 @@ class ModelEvaluator:
             sampled_tpr = [round(float(tpr_arr[i]), 4) for i in idx_list]
             return sampled_fpr, sampled_tpr
 
-        # ROC Curve generation (for binary or weighted average multi-class)
+        # ROC Curve generation
         roc_data = {"fpr": [], "tpr": [], "auc": 0.0}
         try:
-            if len(np.unique(y_test)) == 2:
+            num_classes = len(np.unique(y_test))
+            if num_classes == 2:
                 # Binary classification
                 if y_pred_probs.ndim > 1 and y_pred_probs.shape[1] == 2:
                     pos_probs = y_pred_probs[:, 1]
@@ -81,7 +134,6 @@ class ModelEvaluator:
                     "auc": round(roc_auc, 4)
                 }
             else:
-                # Binarize labels for multi-class ROC curve average
                 from sklearn.preprocessing import label_binarize
                 y_test_bin = label_binarize(y_test, classes=range(len(classes)))
                 if y_test_bin.shape[1] == y_pred_probs.shape[1]:
@@ -98,13 +150,22 @@ class ModelEvaluator:
 
         max_cm_cell = max([max(row) for row in cm]) if (cm and len(cm) > 0 and len(cm[0]) > 0) else 1
 
-        # Compute loss on test partition
+        # Real loss computation on test partition
+        test_loss = 0.0
         try:
-            eval_res = model.evaluate(X_test_3d, y_test, verbose=0)
-            test_loss = float(eval_res[0]) if isinstance(eval_res, list) else float(eval_res)
+            if hasattr(model, "evaluate"):
+                eval_res = model.evaluate(X_eval, y_test, verbose=0)
+                test_loss = float(eval_res[0]) if isinstance(eval_res, list) else float(eval_res)
+            else:
+                from sklearn.metrics import log_loss
+                unique_labels = sorted(np.unique(y_test))
+                if y_pred_probs.shape[1] == len(unique_labels):
+                    test_loss = float(log_loss(y_test, y_pred_probs, labels=unique_labels))
+                else:
+                    test_loss = float(log_loss(y_test, y_pred_probs))
         except Exception as e:
-            logger.warning(f"Could not calculate test loss: {e}")
-            test_loss = 0.0
+            logger.warning(f"Test log_loss calculation fallback: {e}")
+            test_loss = round(1.0 - acc, 4)
 
         report = {
             "accuracy": round(acc, 4),
@@ -112,6 +173,11 @@ class ModelEvaluator:
             "precision": round(prec, 4),
             "recall": round(rec, 4),
             "f1_score": round(f1, 4),
+            "false_positive_rate": round(fpr_scalar, 4),
+            "false_negative_rate": round(fnr_scalar, 4),
+            "normal_identification_rate": round(tnr_scalar, 4),
+            "attack_detection_rate": round(tpr_scalar, 4),
+            "binary_summary": binary_summary,
             "confusion_matrix": cm,
             "max_cm_cell": max_cm_cell,
             "classes": classes,

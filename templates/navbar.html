@@ -30,11 +30,13 @@
                         Compare
                     </a>
                 </li>
+                {% if user.role == 'Admin' %}
                 <li class="nav-item">
                     <a href="{{ url_for('model.train_page') }}" class="nav-link-blue-underline {% if request.endpoint == 'model.train_page' %}active{% endif %}">
                         Training
                     </a>
                 </li>
+                {% endif %}
 
                 <li class="nav-item">
                     <a href="{{ url_for('model.report_page') }}" class="nav-link-blue-underline {% if request.endpoint == 'model.report_page' %}active{% endif %}">
