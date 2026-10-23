@@ -32,6 +32,7 @@ class NetworkFlow:
     fwd_seqs: set = field(default_factory=set)
     bwd_seqs: set = field(default_factory=set)
     last_emitted_packets: int = 0
+    ground_truth: Optional[str] = None
 
     @property
     def duration(self) -> float:
@@ -77,7 +78,8 @@ class FlowManager:
         ttl: int = 64,
         tcp_flags: Optional[Dict[str, int]] = None,
         tcp_seq: Optional[int] = None,
-        timestamp: Optional[float] = None
+        timestamp: Optional[float] = None,
+        ground_truth: Optional[str] = None
     ) -> Optional[NetworkFlow]:
         """
         Ingest an individual packet into its corresponding bidirectional flow.
@@ -101,12 +103,15 @@ class FlowManager:
                 start_time=now,
                 last_time=now,
                 sttl=ttl,
-                service=self._identify_service(src_port, dst_port)
+                service=self._identify_service(src_port, dst_port),
+                ground_truth=ground_truth
             )
             self.active_flows[flow_key] = flow
         else:
             self.active_flows.move_to_end(flow_key)
             flow.last_time = now
+            if ground_truth is not None:
+                flow.ground_truth = ground_truth
 
         flow.packet_times.append(now)
         is_fwd = flow.is_forward(src_ip, src_port)

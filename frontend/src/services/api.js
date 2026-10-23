@@ -82,11 +82,30 @@ export const apiSampleDataset = async (datasetId, params) => {
   });
 };
 
-// Real TensorFlow Model Training & Status Services
-export const apiTrainModel = async (hyperparams) => {
+// Dataset Upload Service (multipart/form-data)
+export const apiUploadDataset = async (formData) => {
+  const token = getAuthToken();
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const response = await fetch('/api/dataset/upload', {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'HTTP ' + response.status }));
+    throw new Error(errorData.error || errorData.message || 'Dataset upload failed');
+  }
+  return await response.json();
+};
+
+// Model Training & Status Services
+export const apiTrainModel = async (payload) => {
   return await authFetch('/train', {
     method: 'POST',
-    body: JSON.stringify(hyperparams)
+    body: JSON.stringify(payload)
   });
 };
 
@@ -98,3 +117,144 @@ export const apiGetModelReport = async () => {
   return await authFetch('/model/report');
 };
 
+// Multi-Model Management Services
+export const apiGetSupportedModels = async () => {
+  return await authFetch('/models/supported');
+};
+
+export const apiGetAllModels = async () => {
+  return await authFetch('/models');
+};
+
+export const apiGetModelById = async (modelId) => {
+  return await authFetch(`/models/${modelId}`);
+};
+
+export const apiActivateModel = async (modelId) => {
+  return await authFetch(`/models/${modelId}/activate`, {
+    method: 'POST'
+  });
+};
+
+export const apiDeleteModel = async (modelId) => {
+  return await authFetch(`/models/${modelId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const apiGetTrainingRunHistory = async (runId) => {
+  return await authFetch(`/training/${runId}/history`);
+};
+
+// Model Comparison Services (Mode A & Mode B)
+export const apiCompareBenchmark = async (payload) => {
+  return await authFetch('/models/compare/benchmark', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const apiCompareLive = async (payload) => {
+  return await authFetch('/models/compare/live', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Live Detection Packet Capture Services
+export const apiGetInterfaces = async () => {
+  return await authFetch('/live-detection/interfaces');
+};
+
+export const apiGetCompatibleModels = async () => {
+  return await authFetch('/live-detection/models');
+};
+
+export const apiStartCapture = async (payload) => {
+  return await authFetch('/live-detection/start', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const apiStopCapture = async () => {
+  return await authFetch('/live-detection/stop', {
+    method: 'POST'
+  });
+};
+
+export const apiGetCaptureStatus = async () => {
+  return await authFetch('/live-detection/status');
+};
+
+export const apiGetDetectionStats = async () => {
+  return await authFetch('/live-detection/stats');
+};
+
+export const apiGetRecentAlerts = async (limit = 25) => {
+  return await authFetch(`/live-detection/alerts?limit=${limit}`);
+};
+
+export const apiClearAlerts = async () => {
+  return await authFetch('/live-detection/alerts/clear', {
+    method: 'POST'
+  });
+};
+
+export const apiGetLiveEvaluation = async (limit = null) => {
+  const query = limit ? `?limit=${limit}` : '';
+  return await authFetch(`/live-detection/evaluation${query}`);
+};
+
+export const apiGetLiveTraffic = async (limit = 60) => {
+  return await authFetch(`/live-detection/traffic?limit=${limit}`);
+};
+
+export const apiRemoveDetectionModel = async (modelId) => {
+  return await authFetch('/live-detection/models/remove', {
+    method: 'POST',
+    body: JSON.stringify({ model_id: modelId })
+  });
+};
+
+export const apiReplayTraffic = async (payload = {}) => {
+  return await authFetch('/live-detection/replay', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const apiResetDetectionSession = async () => {
+  return await authFetch('/live-detection/reset', {
+    method: 'POST'
+  });
+};
+
+export const apiIngestCsvTraffic = async (formDataOrPayload) => {
+  const token = getAuthToken();
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let body;
+  if (formDataOrPayload instanceof FormData) {
+    body = formDataOrPayload;
+  } else {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(formDataOrPayload || {});
+  }
+
+  const response = await fetch('/api/live-detection/ingest-csv', {
+    method: 'POST',
+    headers,
+    body
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'CSV Ingestion HTTP Error ' + response.status }));
+    throw new Error(errorData.error || errorData.message || 'CSV Ingestion Failed');
+  }
+
+  return await response.json();
+};

@@ -44,6 +44,46 @@ class BaseNIDSPreprocessor:
 
         return df, dup_count, missing_count, inf_count
 
+    def resolve_target_col(self, df: pd.DataFrame, target_col: str = None) -> str:
+        """Robustly resolve target/label column name with case-insensitivity and standard fallbacks."""
+        if target_col and target_col in df.columns:
+            return target_col
+
+        # Case-insensitive match if target_col is provided
+        if target_col:
+            target_lower = str(target_col).strip().lower()
+            for col in df.columns:
+                if col.strip().lower() == target_lower:
+                    return col
+
+        # Standard candidate column names
+        candidates = ["attack_cat", "Label", "label", "target", "Target", "class", "Class", "anomaly", "outcome"]
+        for c in candidates:
+            if c in df.columns:
+                return c
+            for col in df.columns:
+                if col.strip().lower() == c.lower():
+                    return col
+
+        # Fallback: check last column
+        return df.columns[-1]
+
+    @staticmethod
+    def safe_stratified_split(X, y, test_size=0.30, random_seed=42):
+        """Safely split features and labels with stratification if class distribution permits, otherwise unstratified."""
+        can_stratify = False
+        if len(np.unique(y)) > 1:
+            counts = pd.Series(y).value_counts()
+            if counts.min() >= 2:
+                can_stratify = True
+
+        return train_test_split(
+            X, y,
+            test_size=test_size,
+            random_state=random_seed,
+            stratify=y if can_stratify else None
+        )
+
     def process(self, df: pd.DataFrame, target_col: str = None) -> tuple[dict, tuple]:
         raise NotImplementedError("Subclasses must implement process()")
 
@@ -55,14 +95,8 @@ class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
         # Strip column whitespace
         df.columns = df.columns.str.strip()
 
-        # Target column identification
-        if not target_col:
-            for c in ["Label", "label", "target", "Class"]:
-                if c in df.columns:
-                    target_col = c
-                    break
-        if not target_col:
-            target_col = df.columns[-1]
+        # Robust target column identification
+        target_col = self.resolve_target_col(df, target_col)
 
         # Clean inf, nulls, duplicates
         df, dup_count, missing_count, inf_count = self.clean_inf_and_nulls(df)
@@ -88,11 +122,11 @@ class CICIDS2017Preprocessor(BaseNIDSPreprocessor):
         X_df = X_df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
 
         # Train / Validation / Test Split BEFORE scaling to prevent leakage
-        X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+        X_train_raw, X_temp, y_train, y_temp = self.safe_stratified_split(
+            X_df.values, y_encoded, test_size=0.30, random_seed=random_seed
         )
-        X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+        X_val_raw, X_test_raw, y_val, y_test = self.safe_stratified_split(
+            X_temp, y_temp, test_size=0.50, random_seed=random_seed
         )
 
         # Fit StandardScaler ONLY on X_train
@@ -128,15 +162,8 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
     def process(self, df: pd.DataFrame, target_col: str = None, random_seed: int = 42) -> tuple[dict, tuple]:
         df.columns = df.columns.str.strip()
 
-        if "attack_cat" in df.columns:
-            target_col = "attack_cat"
-        elif not target_col:
-            for c in ["attack_cat", "label", "Label", "target"]:
-                if c in df.columns:
-                    target_col = c
-                    break
-        if not target_col:
-            target_col = df.columns[-1]
+        # Robust target column identification
+        target_col = self.resolve_target_col(df, target_col)
 
         # Clean inf, nulls, duplicates
         df, dup_count, missing_count, inf_count = self.clean_inf_and_nulls(df)
@@ -165,11 +192,11 @@ class UNSWNB15Preprocessor(BaseNIDSPreprocessor):
 
         X_df = X_df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
 
-        X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+        X_train_raw, X_temp, y_train, y_temp = self.safe_stratified_split(
+            X_df.values, y_encoded, test_size=0.30, random_seed=random_seed
         )
-        X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+        X_val_raw, X_test_raw, y_val, y_test = self.safe_stratified_split(
+            X_temp, y_temp, test_size=0.50, random_seed=random_seed
         )
 
         X_train = self.scaler.fit_transform(X_train_raw)
@@ -204,13 +231,8 @@ class NSLKDDPreprocessor(BaseNIDSPreprocessor):
     def process(self, df: pd.DataFrame, target_col: str = None, random_seed: int = 42) -> tuple[dict, tuple]:
         df.columns = df.columns.str.strip()
 
-        if not target_col:
-            for c in ["label", "Label", "target", "class"]:
-                if c in df.columns:
-                    target_col = c
-                    break
-        if not target_col:
-            target_col = df.columns[-1]
+        # Robust target column identification
+        target_col = self.resolve_target_col(df, target_col)
 
         df, dup_count, missing_count, inf_count = self.clean_inf_and_nulls(df)
 
@@ -232,11 +254,11 @@ class NSLKDDPreprocessor(BaseNIDSPreprocessor):
 
         X_df = X_df.apply(pd.to_numeric, errors='coerce').fillna(0.0)
 
-        X_train_raw, X_temp, y_train, y_temp = train_test_split(
-            X_df.values, y_encoded, test_size=0.30, random_state=random_seed, stratify=y_encoded if len(np.unique(y_encoded)) > 1 else None
+        X_train_raw, X_temp, y_train, y_temp = self.safe_stratified_split(
+            X_df.values, y_encoded, test_size=0.30, random_seed=random_seed
         )
-        X_val_raw, X_test_raw, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=0.50, random_state=random_seed, stratify=y_temp if len(np.unique(y_temp)) > 1 else None
+        X_val_raw, X_test_raw, y_val, y_test = self.safe_stratified_split(
+            X_temp, y_temp, test_size=0.50, random_seed=random_seed
         )
 
         X_train = self.scaler.fit_transform(X_train_raw)

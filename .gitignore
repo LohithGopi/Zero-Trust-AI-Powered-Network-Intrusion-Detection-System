@@ -33,18 +33,29 @@ venv.bak/
 database/database.db
 
 # Machine Learning Models & Serialized Artifacts
+models/*/*
+models/**/*.keras
+models/**/*.h5
+models/**/*.pkl
+models/**/*.joblib
+models/**/*.onnx
+models/**/*.bin
+models/**/*.json
 models/*.keras
 models/*.h5
 models/*.pkl
 models/*.joblib
 models/*.onnx
 !models/.gitkeep
+!models/latest_report.json
 
 # Dataset Files & Uploads
 datasets/raw/*
 !datasets/raw/.gitkeep
 datasets/processed/*
 !datasets/processed/.gitkeep
+datasets/sampled/*
+!datasets/sampled/.gitkeep
 uploads/*
 !uploads/.gitkeep
 
@@ -62,5 +73,21 @@ logs/
 .DS_Store
 Thumbs.db
 
-# PDF Reports (Optional local outputs)
+# Reports & Documentation (Keep local only, do not track in repository)
+report/
+reports/
+brag-output/
 *.pdf
+*.docx
+*.pptx
+*.ppt
+generate_*_pdf.py
+generate_dashboard_guide_pdf.py
+generate_phase1_*.py
+generate_simple_phase1_pdf.py
+generate_system_architecture_pdf.py
+generate_viva_guide_pdf.py
+generate_pdf_report.py
+scripts/generate_complete_dashboard_report_pdf.py
+scripts/generate_advanced_presentation.py
+scripts/inspect_pdf_script.py

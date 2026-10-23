@@ -1,6 +1,8 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import tempfile
+import shutil
 import unittest
 import numpy as np
 from app import create_app
@@ -20,8 +22,12 @@ from security.jwt_auth import generate_token
 class TestLiveDetectionSystem(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config["TESTING"] = True
+        cls.temp_dir = tempfile.mkdtemp(prefix="nids_test_live_")
+        cls.test_db_path = os.path.join(cls.temp_dir, "test.db")
+        cls.app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{cls.test_db_path}"
+        })
         cls.client = cls.app.test_client()
 
         from database.init_db import ModelHistory
@@ -385,16 +391,11 @@ class TestLiveDetectionSystem(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         import shutil
-        from database.init_db import ModelHistory
-        with cls.app.app_context():
-            ModelHistory.query.delete()
-            for row in getattr(cls, "_backup_models", []):
-                db.session.add(ModelHistory(**row))
-            db.session.commit()
-
         test_dir = os.path.abspath(os.path.join("models", "test_run"))
         if os.path.exists(test_dir):
             shutil.rmtree(test_dir, ignore_errors=True)
+        if hasattr(cls, "temp_dir") and os.path.exists(cls.temp_dir):
+            shutil.rmtree(cls.temp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

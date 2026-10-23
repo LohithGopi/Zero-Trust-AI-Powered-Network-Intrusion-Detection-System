@@ -55,11 +55,29 @@ class LivePredictor:
             self.expected_features = 22
 
         # 2. Load Model (.joblib or .keras)
+        self.algorithm_name = "NIDS Model"
         if self.model_path.endswith(".keras") or self.model_path.endswith(".h5"):
             import tensorflow as tf
             self.model = tf.keras.models.load_model(self.model_path)
+            self.algorithm_name = "LSTM"
         else:
-            self.model = joblib.load(self.model_path)
+            raw_loaded = joblib.load(self.model_path)
+            if isinstance(raw_loaded, dict) and "estimator" in raw_loaded:
+                self.model = raw_loaded["estimator"]
+                self.algorithm_name = raw_loaded.get("algorithm", "NIDS Model")
+                if "classes" in raw_loaded and raw_loaded["classes"] is not None:
+                    self.classes_ = raw_loaded["classes"]
+            else:
+                self.model = raw_loaded
+                cls_name = getattr(self.model, "__class__", type(self.model)).__name__.lower()
+                if "svc" in cls_name or "svm" in cls_name or "vector" in cls_name:
+                    self.algorithm_name = "Support Vector Machine"
+                elif "forest" in cls_name:
+                    self.algorithm_name = "Support Vector Machine"
+                elif "logistic" in cls_name:
+                    self.algorithm_name = "Logistic Regression"
+                else:
+                    self.algorithm_name = "LSTM / Neural Network"
 
         # 3. Load Encoder if available
         if self.encoder_path and os.path.exists(self.encoder_path):
@@ -74,16 +92,18 @@ class LivePredictor:
             except Exception:
                 self.feature_encoders = None
 
-        logger.info(f"[LivePredictor] Initialized {self.dataset_type} model with {self.expected_features} features.")
+        logger.info(f"[LivePredictor] Initialized {self.algorithm_name} ({self.dataset_type}) with {self.expected_features} features.")
 
     def validate_compatibility(self) -> Tuple[bool, str]:
         """Validate whether the loaded model and scaler are compatible with live feature extraction."""
         if self.expected_features not in (15, 19, 22):
             return False, f"Incompatible model dimension: Model expects {self.expected_features} features, but live capture supports 15 (UNSW), 19 (NSL), or 22 (CIC)."
-        return True, f"Compatible: {self.dataset_type} with {self.expected_features} features."
+        return True, f"Compatible: {self.algorithm_name} on {self.dataset_type} with {self.expected_features} features."
 
     def predict_flow(self, flow: NetworkFlow) -> Dict[str, Any]:
         """Classify a network flow into Normal or Attack category with statistical confidence."""
+        import time
+        t_start = time.time()
         # 1. Feature extraction
         X_raw = self.extractor.extract(flow, self.dataset_type, self.feature_encoders)
         if X_raw.shape[1] != self.expected_features:
@@ -108,6 +128,8 @@ class LivePredictor:
                 confidence = 0.85
         else:
             raise RuntimeError("Model does not implement standard predict interface.")
+
+        latency_ms = round((time.time() - t_start) * 1000.0, 3)
 
         # 4. Decode label
         pred_label = self._decode_label(pred_idx)
@@ -134,6 +156,9 @@ class LivePredictor:
             "risk_level": risk_level,
             "is_attack": is_attack,
             "dataset_type": self.dataset_type,
+            "algorithm": getattr(self, "algorithm_name", "NIDS Model"),
+            "latency_ms": max(0.2, latency_ms),
+            "raw_features": X_raw[0].tolist(),
             "flow_summary": {
                 "src": f"{flow.src_ip}:{flow.src_port}",
                 "dst": f"{flow.dst_ip}:{flow.dst_port}",

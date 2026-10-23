@@ -276,23 +276,24 @@ export const AuthProvider = ({ children }) => {
               loss: lossStr,
               epochs: data.total_epochs || prev.epochs || 10
             }));
-          } else if (data.status === 'Completed') {
+          } else if (data.status === 'Completed' && (modelStatus === 'Training' || modelStatus === 'Preprocessing')) {
+            // Transition to Trained ONLY after active model training finishes in session
             setModelStatus('Trained');
             setTrainingProgress(prev => ({
               ...prev,
               isTraining: false,
               datasetName: dsName,
-              accuracy: accStr !== '0.00%' ? accStr : (prev.accuracy !== '0.00%' ? prev.accuracy : '96.81%'),
-              loss: lossStr !== '0.0000' ? lossStr : (prev.loss !== '0.0000' ? prev.loss : '0.0842'),
+              accuracy: accStr,
+              loss: lossStr,
               statusMessage: 'Model training completed successfully.'
             }));
             setModelMetrics(prev => ({
               ...prev,
               datasetName: dsName,
-              accuracy: accStr !== '0.00%' ? accStr : (prev.accuracy !== '0.00%' ? prev.accuracy : '96.81%'),
-              loss: lossStr !== '0.0000' ? lossStr : (prev.loss !== '0.0000' ? prev.loss : '0.0842'),
+              accuracy: accStr,
+              loss: lossStr,
               epochs: data.total_epochs || prev.epochs || 10,
-              trainedAt: prev.trainedAt !== 'Pending Training' ? prev.trainedAt : 'Just now'
+              trainedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }));
           } else if (modelStatus === 'Training' || modelStatus === 'Preprocessing') {
             setTrainingProgress(prev => ({ ...prev, isTraining: false }));
@@ -369,6 +370,11 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
 
       resetModelStatus();
+      localStorage.removeItem('active_model');
+      localStorage.removeItem('nids_models');
+      localStorage.removeItem('nids_evaluation');
+      localStorage.removeItem('model_metrics');
+      localStorage.removeItem('model_history');
 
       localStorage.setItem('nids_user', JSON.stringify(userObj));
       const activeToken = (data && data.token && !selectedRole) 
@@ -387,6 +393,11 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('nids_token');
     localStorage.removeItem('nids_user');
+    localStorage.removeItem('active_model');
+    localStorage.removeItem('nids_models');
+    localStorage.removeItem('nids_evaluation');
+    localStorage.removeItem('model_metrics');
+    localStorage.removeItem('model_history');
     setIsAuthenticated(false);
     
     resetModelStatus();

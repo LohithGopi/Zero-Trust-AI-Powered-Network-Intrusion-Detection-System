@@ -14,6 +14,9 @@ class StratifiedNIDSSampler:
         for col in possible:
             if col in df.columns:
                 return col
+        for col in df.columns:
+            if col.strip().lower() in [p.lower() for p in possible]:
+                return col
         # Fallback: check last string or categorical column
         return df.columns[-1]
 

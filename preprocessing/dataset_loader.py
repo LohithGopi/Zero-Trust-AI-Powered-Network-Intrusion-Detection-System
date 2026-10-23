@@ -38,7 +38,7 @@ class DatasetLoader:
     @staticmethod
     def standardize_label_column(df: pd.DataFrame, dataset_type: str) -> pd.DataFrame:
         """Standardize attack label column across different benchmark datasets."""
-        possible_label_cols = ["label", "Label", "attack_cat", "class", "target", "Label "]
+        possible_label_cols = ["label", "Label", "attack_cat", "class", "target", "Label ", "prediction", "ground_truth"]
         found_col = None
 
         for col in possible_label_cols:
@@ -49,9 +49,17 @@ class DatasetLoader:
         if found_col and found_col != "label":
             df.rename(columns={found_col: "label"}, inplace=True)
         elif not found_col and "label" not in df.columns:
-            # Pick last column as target if label not found explicitly
+            # Pick last column as target if label not found explicitly, excluding known metadata columns
             last_col = df.columns[-1]
-            df.rename(columns={last_col: "label"}, inplace=True)
+            meta_cols = {"model_name", "interface", "status", "risk_level", "confidence", "prediction", "timestamp", "id"}
+            if str(last_col).lower() not in meta_cols:
+                df.rename(columns={last_col: "label"}, inplace=True)
+            elif "prediction" in df.columns:
+                df["label"] = df["prediction"]
+            elif "status" in df.columns:
+                df["label"] = df["status"]
+            else:
+                df["label"] = "Normal"
 
         # Clean target string whitespace
         df["label"] = df["label"].astype(str).str.strip()

@@ -31,16 +31,16 @@ export const Sidebar = ({
     { id: 'datasets', label: 'Datasets', icon: Database },
     { id: 'compare', label: 'Compare Datasets', icon: BarChart2 },
     { id: 'training', label: 'Model Training', icon: Cpu },
-    { id: 'model-details', label: 'Performance Evaluation', icon: BarChart2 },
     { id: 'live-detection', label: 'Live Detection', icon: Radio },
+    { id: 'model-details', label: 'Performance Evaluation', icon: BarChart2 },
     { id: 'audit-logs', label: 'Behavioral & Audit', icon: Shield },
     { id: 'about', label: 'About', icon: Info }
   ] : [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'datasets', label: 'Datasets', icon: Database },
     { id: 'compare', label: 'Compare Datasets', icon: BarChart2 },
-    { id: 'model-details', label: 'Performance Evaluation', icon: Cpu },
     { id: 'live-detection', label: 'Live Detection', icon: Radio },
+    { id: 'model-details', label: 'Performance Evaluation', icon: Cpu },
     { id: 'audit-logs', label: 'Behavioral & Audit', icon: Shield },
     { id: 'about', label: 'About', icon: Info }
   ];

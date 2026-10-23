@@ -76,6 +76,91 @@ def register_api():
 
     return jsonify({"message": "Registration successful. Please log in.", "user": new_user.to_dict()}), 201
 
+def reset_system_on_new_login():
+    """
+    Every time a login happens, refresh the system:
+    - Purge all trained models in ModelHistory
+    - Purge all live detections in LiveDetection
+    - Delete model artifact files and directories
+    - Reset training status
+    - Reset live packet capture engine and logger buffers
+    """
+    import shutil
+    from config import Config
+    from database.init_db import ModelHistory, LiveDetection
+    from training.train_model import training_status
+    from live_detection.packet_capture import PacketCaptureManager
+
+    try:
+        from api.live_detection_routes import _capture_manager
+        if _capture_manager.is_running:
+            _capture_manager.stop_capture()
+        _capture_manager.predictor = None
+        _capture_manager.logger.reset_stats()
+        _capture_manager.logger.memory_buffer.clear()
+        _capture_manager.logger.alerts_buffer.clear()
+    except Exception as e:
+        pass
+
+    try:
+        # Delete all model history records
+        all_mh = ModelHistory.query.all()
+        for mh in all_mh:
+            if mh.artifact_path and os.path.isdir(mh.artifact_path) and "test_run" not in mh.artifact_path:
+                shutil.rmtree(mh.artifact_path, ignore_errors=True)
+        ModelHistory.query.delete()
+
+        # Clean up global model artifacts in Config.MODEL_DIR
+        for fname in ("model.joblib", "scaler.pkl", "label_encoder.pkl", "encoder.pkl", "feature_encoders.pkl", "evaluation_report.json"):
+            fpath = os.path.join(Config.MODEL_DIR, fname)
+            if os.path.exists(fpath):
+                try:
+                    os.remove(fpath)
+                except Exception:
+                    pass
+
+        # Clean subdirectories in Config.MODEL_DIR (cic_ids2017, unsw_nb15, nsl_kdd)
+        for sub in ("cic_ids2017", "unsw_nb15", "nsl_kdd"):
+            subdir = os.path.join(Config.MODEL_DIR, sub)
+            if os.path.isdir(subdir):
+                for item in os.listdir(subdir):
+                    item_path = os.path.join(subdir, item)
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path, ignore_errors=True)
+                    elif os.path.isfile(item_path):
+                        try:
+                            os.remove(item_path)
+                        except Exception:
+                            pass
+
+        # Clear live detections table
+        LiveDetection.query.delete()
+
+        # Reset training status
+        training_status["run_id"] = None
+        training_status["dataset_name"] = None
+        training_status["is_training"] = False
+        training_status["current_epoch"] = 0
+        training_status["accuracy"] = 0.0
+        training_status["loss"] = 0.0
+        training_status["val_accuracy"] = 0.0
+        training_status["val_loss"] = 0.0
+        training_status["epoch_history"] = []
+        training_status["status"] = "Ready"
+        training_status["message"] = "Session refreshed on login. No model trained."
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
+
+@auth_bp.route("/api/auth/reset-session", methods=["POST"])
+def reset_session_api():
+    """Manually or programmatically refresh all models and processes."""
+    reset_system_on_new_login()
+    return jsonify({"success": True, "message": "All models, live detection flows, and training processes refreshed."}), 200
+
+
 @auth_bp.route("/api/login", methods=["POST"])
 @auth_bp.route("/api/auth/login", methods=["POST"])
 def login_api():
@@ -114,6 +199,9 @@ def login_api():
         details=f"Authenticated as '{role_name}' role."
     )
 
+    # Requirement: On every new login, reset models, training and detection processes
+    reset_system_on_new_login()
+
     response = make_response(jsonify({
         "message": "Login successful",
         "token": token,
@@ -134,6 +222,7 @@ def logout():
         ip_address=request.remote_addr,
         details="User logged out."
     )
+    reset_system_on_new_login()
     response = make_response(redirect(url_for("auth.login_page")))
     response.set_cookie("jwt_token", "", expires=0)
     return response

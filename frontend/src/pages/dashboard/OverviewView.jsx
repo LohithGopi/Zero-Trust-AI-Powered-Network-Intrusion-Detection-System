@@ -141,13 +141,13 @@ export const OverviewView = ({ onNavigate }) => {
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">CURRENT MODEL</span>
-            <Cpu className="h-4 w-4 text-blue-600" />
+            <Cpu className={`h-4 w-4 ${isTrained ? 'text-blue-600' : 'text-slate-400'}`} />
           </div>
-          <div className="text-xs font-bold text-slate-900">
-            LSTM Network
+          <div className={`text-xs font-bold ${isTrained ? 'text-slate-900' : 'text-slate-400'}`}>
+            {isTrained ? (modelMetrics?.algorithm || 'Support Vector Machine') : 'No Active Model'}
           </div>
           <div className="text-[10px] text-slate-500">
-            TensorFlow / Keras
+            {isTrained ? 'Trained in Session' : 'Pending Training'}
           </div>
         </div>
 

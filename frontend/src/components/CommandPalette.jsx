@@ -37,9 +37,9 @@ export const CommandPalette = ({ isOpen, onClose, onNavigate, onSimulateAttack }
         { id: 'nav-overview', label: 'SOC Command Center Overview', icon: Activity, action: () => { onNavigate?.('overview'); onClose(false); } },
         { id: 'nav-training', label: 'Deep Learning Model Training Studio', icon: Cpu, action: () => { onNavigate?.('training'); onClose(false); } },
         { id: 'nav-live', label: 'Live Network Traffic Detection (Passive Sniffing)', icon: Activity, action: () => { onNavigate?.('live-detection'); onClose(false); } },
+        { id: 'nav-model', label: 'System Performance Evaluation & Model Specifications', icon: BarChart2, action: () => { onNavigate?.('model-details'); onClose(false); } },
         { id: 'nav-datasets', label: 'Dataset Ingestion & Repository', icon: Database, action: () => { onNavigate?.('datasets'); onClose(false); } },
         { id: 'nav-compare', label: 'Multi-Dataset Benchmark Comparison', icon: Layers, action: () => { onNavigate?.('compare'); onClose(false); } },
-        { id: 'nav-model', label: 'LSTM Neural Model Specifications', icon: Terminal, action: () => { onNavigate?.('model'); onClose(false); } },
         { id: 'nav-audit', label: 'Immutable Audit Trail Stream', icon: Shield, action: () => { onNavigate?.('audit'); onClose(false); } },
         { id: 'nav-about', label: 'Technical Documentation & Architecture', icon: FileText, action: () => { onNavigate?.('about'); onClose(false); } }
       ]

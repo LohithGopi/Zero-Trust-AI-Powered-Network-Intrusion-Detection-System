@@ -77,7 +77,7 @@ class ModelEvaluator:
             fn = int(np.sum((y_test != 0) & (y_pred == 0)))
             tp = int(np.sum((y_test != 0) & (y_pred != 0)))
 
-        # False Positive Rate (FPR): How often normal traffic is incorrectly classified as an attack
+        # False Positive Rate (FPR): How often normal traffic is falsely flagged as an attack
         fpr_scalar = float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0
         # False Negative Rate (FNR): How often attack traffic is missed as normal
         fnr_scalar = float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0
@@ -186,9 +186,9 @@ class ModelEvaluator:
         }
 
         # Save evaluation report to JSON file
-        os.makedirs(os.path.dirname(self.report_path), exist_ok=True)
-        with open(self.report_path, "w", encoding="utf-8") as f:
-            json.dump(report, f, indent=4)
-            
-        logger.info(f"Model evaluation report saved to {self.report_path}")
+        if self.report_path:
+            os.makedirs(os.path.dirname(self.report_path), exist_ok=True)
+            with open(self.report_path, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=4)
+            logger.info(f"Model evaluation report saved to {self.report_path}")
         return report

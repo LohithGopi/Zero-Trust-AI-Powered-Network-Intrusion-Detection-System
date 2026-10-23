@@ -10,10 +10,12 @@ from api.model_routes import model_bp
 from api.live_detection_routes import live_detection_bp
 from utils.logger import logger, log_audit_event
 
-def create_app():
+def create_app(test_config=None):
     """Application Factory for AI Zero Trust NIDS Flask Web Application."""
     app = Flask(__name__, static_folder='frontend/dist', static_url_path='')
     app.config.from_object(Config)
+    if test_config:
+        app.config.update(test_config)
 
     # Initialize app directories and database
     Config.init_app(app)
@@ -85,7 +87,6 @@ def create_app():
     def serve_logo():
         return send_from_directory('frontend/public', 'jnnce_logo.png')
 
-    @app.route("/trojan")
     @app.route("/academic")
     def spa_landing_routes():
         dist_index = os.path.join(app.root_path, 'frontend', 'dist', 'index.html')

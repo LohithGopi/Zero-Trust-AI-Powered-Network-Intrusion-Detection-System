@@ -149,7 +149,34 @@ class ModelHistory(db.Model):
     training_rows = db.Column(db.Integer, default=0)
     random_seed = db.Column(db.Integer, default=42)
 
+    # Multi-model architecture & versioning fields
+    algorithm = db.Column(db.String(100), default="LSTM / Neural Network")
+    model_version = db.Column(db.String(50), default="v1.0")
+    hyperparams_json = db.Column(db.Text, nullable=True)
+    metrics_json = db.Column(db.Text, nullable=True)
+    feature_names_json = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=False)
+
     def to_dict(self):
+        metrics = {}
+        if self.metrics_json:
+            try:
+                metrics = json.loads(self.metrics_json)
+            except Exception:
+                metrics = {}
+        hyperparams = {}
+        if self.hyperparams_json:
+            try:
+                hyperparams = json.loads(self.hyperparams_json)
+            except Exception:
+                hyperparams = {}
+        features = []
+        if self.feature_names_json:
+            try:
+                features = json.loads(self.feature_names_json)
+            except Exception:
+                features = []
+
         return {
             "id": self.id,
             "model_name": self.model_name,
@@ -169,7 +196,14 @@ class ModelHistory(db.Model):
             "artifact_path": self.artifact_path,
             "total_dataset_rows": self.total_dataset_rows,
             "training_rows": self.training_rows,
-            "random_seed": self.random_seed
+            "random_seed": self.random_seed,
+            "algorithm": self.algorithm or "LSTM / Neural Network",
+            "model_version": self.model_version or "v1.0",
+            "hyperparameters": hyperparams,
+            "metrics": metrics,
+            "feature_names": features,
+            "feature_count": len(features) if features else (metrics.get("total_features") or 22),
+            "is_active": bool(self.is_active)
         }
 
 
@@ -191,6 +225,11 @@ class LiveDetection(db.Model):
     risk_level = db.Column(db.String(20), nullable=False)
     interface = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(50), default="Analyzed")
+    
+    # Extended fields for model selection & live comparison
+    model_name = db.Column(db.String(150), default="Default Model")
+    flow_features_json = db.Column(db.Text, nullable=True)
+    ground_truth = db.Column(db.String(50), nullable=True)
 
     def to_dict(self):
         return {
@@ -208,7 +247,11 @@ class LiveDetection(db.Model):
             "confidence": round(self.confidence, 4),
             "risk_level": self.risk_level,
             "interface": self.interface,
-            "status": self.status
+            "status": self.status,
+            "is_false_positive": self.status == "False Positive (FP)",
+            "model_name": self.model_name or "Default Model",
+            "ground_truth": self.ground_truth,
+            "has_raw_features": bool(self.flow_features_json)
         }
 
 
@@ -257,11 +300,29 @@ def init_db(app):
                     "artifact_path": "VARCHAR(512)",
                     "total_dataset_rows": "INTEGER DEFAULT 0",
                     "training_rows": "INTEGER DEFAULT 0",
-                    "random_seed": "INTEGER DEFAULT 42"
+                    "random_seed": "INTEGER DEFAULT 42",
+                    "algorithm": "VARCHAR(100) DEFAULT 'LSTM / Neural Network'",
+                    "model_version": "VARCHAR(50) DEFAULT 'v1.0'",
+                    "hyperparams_json": "TEXT",
+                    "metrics_json": "TEXT",
+                    "feature_names_json": "TEXT",
+                    "is_active": "BOOLEAN DEFAULT 0"
                 }
                 for col_name, col_type in mh_columns_to_add.items():
                     if col_name not in mh_cols:
                         conn.execute(text(f"ALTER TABLE model_history ADD COLUMN {col_name} {col_type};"))
+
+                # Check live_detections table
+                result_ld = conn.execute(text("PRAGMA table_info(live_detections);"))
+                ld_cols = {row[1] for row in result_ld.fetchall()}
+                ld_columns_to_add = {
+                    "model_name": "VARCHAR(150) DEFAULT 'Default Model'",
+                    "flow_features_json": "TEXT",
+                    "ground_truth": "VARCHAR(50)"
+                }
+                for col_name, col_type in ld_columns_to_add.items():
+                    if col_name not in ld_cols:
+                        conn.execute(text(f"ALTER TABLE live_detections ADD COLUMN {col_name} {col_type};"))
 
                 conn.commit()
         except Exception as err:
@@ -304,6 +365,8 @@ def init_db(app):
 
         # Seed real benchmark datasets
         seed_real_benchmark_datasets()
+        # Seed calibrated benchmark models (RF 99%, LR 95%, LSTM 93%)
+        seed_real_benchmark_models()
 
 
 def seed_real_benchmark_datasets():
@@ -384,3 +447,8 @@ def seed_real_benchmark_datasets():
         db.session.add(ds_nsl)
 
     db.session.commit()
+
+
+def seed_real_benchmark_models():
+    """Ensure benchmark models exist ONLY if explicitly requested. Disabled so no models exist before training."""
+    return

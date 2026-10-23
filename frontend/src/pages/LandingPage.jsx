@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, ArrowRight, GraduationCap, Sparkles } from 'lucide-react';
+import { Shield, Lock, ArrowRight, GraduationCap } from 'lucide-react';
 
 export const LandingPage = ({ onExplore, onOpenLogin, onSwitchToTrojan }) => {
   const handlePortalAccess = () => {
@@ -41,27 +41,12 @@ export const LandingPage = ({ onExplore, onOpenLogin, onSwitchToTrojan }) => {
             </div>
           </div>
 
-          {/* Right: 3D Trojan View Switcher + Login to Security Portal Button */}
-          <div className="flex items-center space-x-2.5">
-            {onSwitchToTrojan && (
-              <button
-                type="button"
-                onClick={onSwitchToTrojan}
-                className="px-3 py-2 text-xs font-semibold text-slate-700 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 border border-slate-200/80 rounded-lg transition-all flex items-center space-x-1.5 active:scale-95"
-                title="Switch to 3D Trojan Horse Interactive Landing Page"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                <span className="hidden sm:inline">3D Trojan View</span>
-              </button>
-            )}
-
-            <button
-              onClick={handlePortalAccess}
-              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-all flex items-center space-x-2 active:scale-95"
-            >
-              <Lock className="h-3.5 w-3.5" />
-              <span>Login to Security Portal</span>
-            </button>
+          {/* Right: Academic Project Tag */}
+          <div className="flex items-center space-x-2">
+            <span className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/80 text-xs font-semibold">
+              <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
+              <span>B.E. Final Year Project (2023–2027)</span>
+            </span>
           </div>
 
         </div>
@@ -119,14 +104,14 @@ export const LandingPage = ({ onExplore, onOpenLogin, onSwitchToTrojan }) => {
           </span>
         </div>
 
-        {/* Explore Dashboard Button */}
+        {/* Login to Security Portal Button */}
         <div className="mt-6">
           <button
-            onClick={onExplore || handlePortalAccess}
+            onClick={handlePortalAccess}
             className="px-6 py-3 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center space-x-2 active:scale-95"
           >
             <Lock className="h-4 w-4" />
-            <span>Explore Dashboard</span>
+            <span>Login to Security Portal</span>
             <ArrowRight className="h-4 w-4 ml-1" />
           </button>
         </div>

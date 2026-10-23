@@ -1,3 +1,0 @@
-Built our Final Year B.E. Academic Project (Batch No. 34) at JNNCE Shivamogga (Dept. of ISE): Zero Trust AI-Powered Network Intrusion Detection System.
-
-From the official JNNCE Academic Landing Page to an interactive Model Training Console (25,000-row stratified sampling, Seed 42, 10-epoch live accuracy & loss convergence curves), a 7×7 multi-class attack Confusion Matrix on UNSW-NB15 (96.0% accuracy across Normal, DoS, Exploits, Fuzzers, Generic, Reconnaissance & Analysis), and real-time Scapy live packet inspection.
