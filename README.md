@@ -21,6 +21,7 @@ An enterprise-grade **AI-Powered Network Intrusion Detection System (NIDS)** com
 - [Project Folder Structure](#-project-folder-structure)
 - [Installation & Setup](#-installation--setup)
 - [How to Run](#-how-to-run)
+- Project Demo(#-project-demo)
 - [API Endpoints Documentation](#-api-endpoints-documentation)
 - [Automated Testing](#-automated-testing)
 - [Ethical Safety & Passive Monitoring Notice](#-ethical-safety--passive-monitoring-notice)
@@ -219,6 +220,8 @@ AI-Powered-Zero-Trust-Network-Intrusion-Detection-System/
    - **Analyst**: `analyst` / `analyst123` (Dataset analysis, model inspection, live detection)
 
 ---
+## Project Demo
+https://github.com/user-attachments/assets/209b778d-63e4-4382-a588-b8e45dfffe40
 
 ## 🔌 API Endpoints Documentation
 
@@ -258,6 +261,9 @@ All 9 test cases run in $<1.0\text{s}$ against in-memory components and SQLite t
 ---
 
 ## 👤 Author & License
+
+
+
 
 **Lohith Gopi**
 - **Institution**: Jawaharlal Nehru National College of Engineering (JNNCE), Shivamogga
