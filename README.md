@@ -49,6 +49,117 @@ This platform enforces **Zero Trust**:
 
 ---
 
+---
+
+## 🏛️ System Architecture & Zero-Trust Role Separation
+
+The following interactive architecture diagram illustrates how the **Admin** and **Analyst** roles diverge under the Zero-Trust Principle of Least Privilege and Separation of Duties:
+
+```mermaid
+flowchart TD
+    %% User Roles
+    subgraph Roles ["User Roles (Separation of Duties)"]
+        Admin["Admin Role (Full Control)"]
+        Analyst["Analyst Role (SOC Operator)"]
+    end
+
+    %% SOC Interface
+    subgraph SOC_Interface ["SOC Interface (Frontend React SPA)"]
+        App["Web Application [App.jsx]"]
+        AuthContext["Session Context [AuthContext.jsx]<br/>(Extracts Role and JWT Token)"]
+        Dashboard["SOC Dashboard [DashboardApp.jsx]"]
+        ApiClient["API Client [api.js]"]
+        
+        AdminView["Admin Views<br/>- Full Dashboard<br/>- Model Training (Enabled)<br/>- Model Hot-Swap & Delete<br/>- Dataset Deletion"]
+        AnalystView["Analyst Views<br/>- Monitoring Dashboard<br/>- Model Training (Hidden)<br/>- Read-Only Training HUD<br/>- Live Traffic & Audit Logs"]
+    end
+
+    %% Application API Gateway
+    subgraph App_API ["Application API Gateway (Flask Backend)"]
+        Flask["Flask Application [app.py]"]
+        AuthRoutes["Auth Routes [auth_routes.py]"]
+        DatasetRoutes["Dataset Routes [dataset_routes.py]"]
+        ModelRoutes["Model Routes [model_routes.py]"]
+        LiveRoutes["Live Detection Routes [live_detection_routes.py]"]
+    end
+
+    %% Zero Trust Security & Audit
+    subgraph ZeroTrust ["Zero Trust Security and Identity"]
+        RBAC{"Zero Trust RBAC<br/>[zero_trust.py]"}
+        JWT["JWT Verification<br/>[jwt_auth.py]"]
+        AuditLog["Audit Logging<br/>[logger.py]"]
+        DB[("Application Database<br/>[init_db.py]")]
+    end
+
+    %% ML Pipeline
+    subgraph ML_Pipeline ["Dataset and Model Pipeline"]
+        DSLoader["Dataset Loading<br/>[dataset_loader.py]"]
+        Sampler["Dataset Sampling<br/>[sampler.py]"]
+        Preprocess["Feature Preprocessing<br/>[preprocess.py]"]
+        TrainModel["Model Training<br/>[train_model.py]<br/>(ADMIN ONLY)"]
+        ModelReg["Model Registry & Activation<br/>[model_registry.py]<br/>(ADMIN ONLY)"]
+        EvalModel["Model Evaluation & Comparison<br/>[evaluate_model.py]"]
+    end
+
+    %% Live Detection
+    subgraph Live_Detection ["Live Detection Engine"]
+        Capture["Packet Capture<br/>[packet_capture.py]"]
+        FlowMgr["Flow Aggregation<br/>[flow_manager.py]"]
+        Predictor["Live Inference<br/>[live_predictor.py]"]
+        Detections["Detection Records<br/>(Alerts and Telemetry)"]
+    end
+
+    %% Connections
+    Admin -->|"Logs in as Admin"| App
+    Analyst -->|"Logs in as Analyst"| App
+    App --> AuthContext
+    AuthContext --> Dashboard
+    
+    Dashboard -->|"Role == Admin"| AdminView
+    Dashboard -->|"Role == Analyst"| AnalystView
+    
+    AdminView --> ApiClient
+    AnalystView --> ApiClient
+    ApiClient -->|"Authorized HTTP Requests + JWT"| Flask
+
+    Flask --> AuthRoutes
+    Flask --> DatasetRoutes
+    Flask --> ModelRoutes
+    Flask --> LiveRoutes
+
+    %% Zero Trust Interception
+    DatasetRoutes --> RBAC
+    ModelRoutes --> RBAC
+    LiveRoutes --> RBAC
+    AuthRoutes --> JWT
+    JWT --> DB
+
+    %% RBAC Decisions
+    RBAC -->|"Allowed for Admin"| TrainModel
+    RBAC -->|"Allowed for Admin"| ModelReg
+    RBAC -->|"Analyst Request Blocked: 403 Forbidden"| AuditLog
+    
+    RBAC -->|"Allowed for Admin & Analyst"| DSLoader
+    RBAC -->|"Allowed for Admin & Analyst"| EvalModel
+    RBAC -->|"Allowed for Admin & Analyst"| Capture
+    RBAC -->|"Allowed for Admin & Analyst"| LiveRoutes
+
+    %% Pipeline flow
+    DSLoader --> Sampler
+    Sampler --> Preprocess
+    Preprocess --> TrainModel
+    TrainModel --> ModelReg
+    ModelReg --> EvalModel
+
+    %% Live Flow
+    Capture --> FlowMgr
+    FlowMgr --> Predictor
+    ModelReg -.->|"Loads Active Model"| Predictor
+    Predictor --> Detections
+    Detections --> DB
+    AuditLog --> DB
+```
+
 ## 📡 Live Network Traffic Detection Module
 
 The live detection module inspects network traffic passively on the host machine without packet injection or external scanning.
