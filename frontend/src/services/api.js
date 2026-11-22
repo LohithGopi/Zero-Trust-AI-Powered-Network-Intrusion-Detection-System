@@ -16,6 +16,9 @@ export const authFetch = async (url, options = {}) => {
   try {
     const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
     if (!response.ok) {
+      if (response.status === 405) {
+        throw new Error('HTTP 405 (Method Not Allowed): Vercel static routing cannot handle direct API requests. Please verify your backend server/tunnel is online and configured in VITE_API_BASE_URL.');
+      }
       const errorData = await response.json().catch(() => ({ message: 'HTTP Error ' + response.status }));
       throw new Error(errorData.message || errorData.error || 'API Request Failed');
     }
@@ -90,7 +93,7 @@ export const apiUploadDataset = async (formData) => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const response = await fetch('/api/dataset/upload', {
+  const response = await fetch(`${API_BASE}/dataset/upload`, {
     method: 'POST',
     headers,
     body: formData
@@ -246,7 +249,7 @@ export const apiIngestCsvTraffic = async (formDataOrPayload) => {
     body = JSON.stringify(formDataOrPayload || {});
   }
 
-  const response = await fetch('/api/live-detection/ingest-csv', {
+  const response = await fetch(`${API_BASE}/live-detection/ingest-csv`, {
     method: 'POST',
     headers,
     body

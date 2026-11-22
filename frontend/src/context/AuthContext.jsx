@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiLogin, apiGetModelStatus, apiGetDatasets } from '../services/api';
+import { apiLogin, apiGetModelStatus, apiGetDatasets, authFetch } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -164,13 +164,8 @@ export const AuthProvider = ({ children }) => {
       return updated;
     });
     try {
-      const token = localStorage.getItem('nids_token');
-      await fetch('/api/dataset/select', {
+      await authFetch('/dataset/select', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
         body: JSON.stringify({ id })
       });
     } catch (e) {

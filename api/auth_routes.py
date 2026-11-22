@@ -27,9 +27,16 @@ def forgot_password_page():
     return render_template("forgot_password.html")
 
 
-@auth_bp.route("/api/register", methods=["POST"])
-@auth_bp.route("/api/auth/register", methods=["POST"])
+@auth_bp.route("/api/register", methods=["GET", "POST"])
+@auth_bp.route("/api/auth/register", methods=["GET", "POST"])
 def register_api():
+    if request.method == "GET":
+        return jsonify({
+            "service": "Zero Trust AI-Powered NIDS Registration Service",
+            "status": "online",
+            "message": "Registration endpoint is active. Send a POST request with JSON payload to register."
+        }), 200
+
     data = request.get_json() or request.form
     username = data.get("username", "").strip()
     email = data.get("email", "").strip().lower()
@@ -166,9 +173,16 @@ def reset_session_api():
     return jsonify({"success": True, "message": "All models, live detection flows, and training processes refreshed."}), 200
 
 
-@auth_bp.route("/api/login", methods=["POST"])
-@auth_bp.route("/api/auth/login", methods=["POST"])
+@auth_bp.route("/api/login", methods=["GET", "POST"])
+@auth_bp.route("/api/auth/login", methods=["GET", "POST"])
 def login_api():
+    if request.method == "GET":
+        return jsonify({
+            "service": "Zero Trust AI-Powered NIDS Authentication Service",
+            "status": "online",
+            "message": "Authentication endpoint is active. Send a POST request with JSON payload {'username': '...', 'password': '...'}"
+        }), 200
+
     data = request.get_json() or request.form
     username = data.get("username", "").strip()
     password = data.get("password", "")
