@@ -345,9 +345,6 @@ class SVMNIDSModel(BaseNIDSModel):
         }
 
 
-# Alias for backwards compatibility
-RandomForestNIDSModel = SVMNIDSModel
-
 
 class LogisticRegressionNIDSModel(BaseNIDSModel):
     """Logistic Regression Classifier with Regularization for Network Intrusion Detection."""
@@ -673,8 +670,6 @@ class ModelRegistry:
         "svm": SVMNIDSModel,
         "support_vector_machine": SVMNIDSModel,
         "svc": SVMNIDSModel,
-        "random_forest": SVMNIDSModel,
-        "rf": SVMNIDSModel,
         "logistic_regression": LogisticRegressionNIDSModel,
         "lr": LogisticRegressionNIDSModel,
         "lstm": LSTMNIDSModel,
@@ -691,7 +686,7 @@ class ModelRegistry:
     def get_canonical_type(cls, model_type: str) -> str:
         """Map user / API string to canonical identifier."""
         cleaned = (model_type or "").strip().lower().replace(" ", "_").replace("-", "_")
-        if "svm" in cleaned or "vector" in cleaned or "svc" in cleaned or "forest" in cleaned or cleaned in ("rf", "random_forest"):
+        if "svm" in cleaned or "vector" in cleaned or "svc" in cleaned:
             return "svm"
         elif "logistic" in cleaned or cleaned in ("lr", "logistic_regression"):
             return "logistic_regression"
@@ -725,7 +720,7 @@ class ModelRegistry:
         # Fallback to model_type or infer from estimator class
         if not model_type:
             cls_name = raw.__class__.__name__.lower()
-            if "svc" in cls_name or "svm" in cls_name or "forest" in cls_name:
+            if "svc" in cls_name or "svm" in cls_name:
                 model_type = "svm"
             elif "logistic" in cls_name:
                 model_type = "logistic_regression"

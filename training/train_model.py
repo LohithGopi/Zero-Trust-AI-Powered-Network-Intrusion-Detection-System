@@ -318,7 +318,7 @@ def start_training_in_background(
         merged_params.setdefault("epochs", epochs)
         merged_params.setdefault("batch_size", batch_size)
         merged_params.setdefault("learning_rate", learning_rate)
-    elif canonical_type in ("svm", "random_forest"):
+    elif canonical_type == "svm":
         merged_params.setdefault("C", float(merged_params.get("C", 1.0)))
         merged_params.setdefault("kernel", merged_params.get("kernel", "rbf"))
         merged_params.setdefault("gamma", merged_params.get("gamma", "scale"))
@@ -335,7 +335,7 @@ def start_training_in_background(
     model_instance = ModelRegistry.create_model(canonical_type, merged_params)
 
     # Determine expected step count based on algorithm
-    if canonical_type in ("svm", "random_forest"):
+    if canonical_type == "svm":
         initial_tot_steps = 5
     elif canonical_type == "logistic_regression":
         initial_tot_steps = 5
@@ -571,7 +571,7 @@ def start_training_in_background(
                 # Persist to database: Set prior models is_active=False and insert new record without deleting history
                 try:
                     ModelHistory.query.update({ModelHistory.is_active: False})
-                    framework_str = "Scikit-Learn" if canonical_type in ("svm", "random_forest", "logistic_regression") else "Scikit-Learn Neural Engine / Keras Fallback"
+                    framework_str = "Scikit-Learn" if canonical_type in ("svm", "logistic_regression") else "Scikit-Learn Neural Engine / Keras Fallback"
                     mh = ModelHistory(
                         model_name=f"{model_instance.algorithm_name} ({dataset_type})",
                         dataset_name=dataset_name,

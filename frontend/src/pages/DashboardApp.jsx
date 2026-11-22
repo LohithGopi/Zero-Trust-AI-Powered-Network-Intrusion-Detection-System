@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { CommandPalette } from '../components/CommandPalette';
 import { CitationModal } from '../components/CitationModal';
-import { OverviewView } from './dashboard/OverviewView';
+import { OverviewViewUnslop } from './dashboard/OverviewViewUnslop';
 import { DatasetsView } from './dashboard/DatasetsView';
 import { CompareView } from './dashboard/CompareView';
 import { TrainingView } from './dashboard/TrainingView';
@@ -40,13 +40,13 @@ export const DashboardApp = ({ onBackToLanding }) => {
 
     switch (activeTab) {
       case 'dashboard':
-        return <OverviewView onNavigate={setActiveTab} />;
+        return <OverviewViewUnslop onNavigate={setActiveTab} />;
       case 'datasets':
         return <DatasetsView onNavigate={setActiveTab} />;
       case 'compare':
         return <CompareView />;
       case 'training':
-        return isAdmin ? <TrainingView onNavigate={setActiveTab} /> : <OverviewView onNavigate={setActiveTab} />;
+        return isAdmin ? <TrainingView onNavigate={setActiveTab} /> : <OverviewViewUnslop onNavigate={setActiveTab} />;
       case 'model-details':
         return <ModelDetailsView onNavigate={setActiveTab} />;
       case 'live-detection':
@@ -56,7 +56,7 @@ export const DashboardApp = ({ onBackToLanding }) => {
       case 'about':
         return <AboutView />;
       default:
-        return <OverviewView onNavigate={setActiveTab} />;
+        return <OverviewViewUnslop onNavigate={setActiveTab} />;
     }
   };
 
