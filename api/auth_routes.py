@@ -34,7 +34,12 @@ def register_api():
     username = data.get("username", "").strip()
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
-    role_name = data.get("role", "Analyst")
+    
+    # Zero Trust: Only existing Admins can assign roles; public registrations default strictly to Analyst
+    if g.user and g.user.get("role") == "Admin":
+        role_name = data.get("role", "Analyst")
+    else:
+        role_name = "Analyst"
 
     if not username or not email or not password:
         return jsonify({"error": "Username, email, and password are required."}), 400

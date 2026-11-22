@@ -1,4 +1,5 @@
 import os
+import secrets
 
 # Suppress TensorFlow verbose info logs
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -10,9 +11,9 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     """Central configuration class for AI Zero Trust NIDS Application."""
     
-    # Secret keys for sessions and JWT
-    SECRET_KEY = os.environ.get("SECRET_KEY", "zero-trust-nids-super-secret-key-2026")
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "jwt-zero-trust-auth-secret-key-9988")
+    # Secret keys for sessions and JWT (Zero Trust: loaded from env or cryptographically generated)
+    SECRET_KEY = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY") or secrets.token_hex(32)
     JWT_EXPIRATION_HOURS = 8
 
     # Database Configuration

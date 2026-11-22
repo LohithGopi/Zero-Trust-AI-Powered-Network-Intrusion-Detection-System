@@ -270,6 +270,9 @@ def init_db(app):
         try:
             from sqlalchemy import text
             with db.engine.connect() as conn:
+                # Enable SQLite Write-Ahead Logging (WAL) to prevent locks during live sniffing
+                conn.execute(text("PRAGMA journal_mode=WAL;"))
+                conn.commit()
                 # Check dataset_history table
                 result_ds = conn.execute(text("PRAGMA table_info(dataset_history);"))
                 ds_cols = {row[1] for row in result_ds.fetchall()}
