@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Lock, ArrowLeft, Key, Shield } from 'lucide-react';
+import { Lock, ArrowLeft, Key, Shield, Info, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin }) => {
+export const LoginPage = ({ onBackToLanding, onSuccessLogin }) => {
   const { login } = useAuth();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
   const [selectedRole, setSelectedRole] = useState('Admin');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResetNotice, setShowResetNotice] = useState(false);
 
   const handleRoleSelect = (roleName) => {
     setSelectedRole(roleName);
@@ -118,12 +119,25 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
                 </label>
                 <button
                   type="button"
-                  onClick={onForgotPassword}
+                  onClick={() => setShowResetNotice(!showResetNotice)}
                   className="text-xs text-blue-600 hover:underline font-medium"
                 >
                   Forgot Password?
                 </button>
               </div>
+
+              {showResetNotice && (
+                <div className="mb-3 p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-slate-700 space-y-1 animate-fade-in text-left">
+                  <div className="flex items-center space-x-1.5 font-bold text-blue-800">
+                    <Info className="h-4 w-4 shrink-0 text-blue-600" />
+                    <span>Zero Trust Policy (NIST SP 800-207)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    Public self-service credential resets are disabled to prevent account takeover. Please use the pre-configured Evaluator credentials below to test the platform.
+                  </p>
+                </div>
+              )}
+
               <input
                 type="password"
                 required
@@ -150,10 +164,64 @@ export const LoginPage = ({ onBackToLanding, onForgotPassword, onSuccessLogin })
             </button>
           </form>
 
+          {/* Quick Evaluator / Demo Credentials Card */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2 text-left">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+              <span className="font-semibold text-slate-700 flex items-center space-x-1.5">
+                <Key className="h-3.5 w-3.5 text-blue-600" />
+                <span>EVALUATOR & DEMO ACCESS</span>
+              </span>
+              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                READY TO TEST
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('Admin')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  selectedRole === 'Admin'
+                    ? 'bg-white border-blue-500 shadow-xs ring-1 ring-blue-500/20'
+                    : 'bg-white/60 border-slate-200 hover:bg-white'
+                }`}
+              >
+                <div className="font-bold text-slate-900 text-xs flex items-center justify-between">
+                  <span>Admin Role</span>
+                  <span className="text-[9px] font-mono font-bold text-purple-700 bg-purple-50 px-1 rounded">FULL</span>
+                </div>
+                <div className="text-[11px] font-mono text-slate-500 mt-1">
+                  admin / admin123
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleRoleSelect('Analyst')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  selectedRole === 'Analyst'
+                    ? 'bg-white border-blue-500 shadow-xs ring-1 ring-blue-500/20'
+                    : 'bg-white/60 border-slate-200 hover:bg-white'
+                }`}
+              >
+                <div className="font-bold text-slate-900 text-xs flex items-center justify-between">
+                  <span>Analyst Role</span>
+                  <span className="text-[9px] font-mono font-bold text-blue-700 bg-blue-50 px-1 rounded">READ</span>
+                </div>
+                <div className="text-[11px] font-mono text-slate-500 mt-1">
+                  analyst / analyst123
+                </div>
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 text-center">
+              Click either role card above to auto-fill credentials.
+            </p>
+          </div>
+
           {/* Role Status Tag */}
-          <div className="text-center pt-4 border-t border-slate-100">
+          <div className="text-center pt-2 border-t border-slate-100">
             <span className="text-xs font-mono text-slate-500">
-              Zero Trust Role:{' '}
+              Active Selection:{' '}
               <span className="font-bold text-blue-600">{selectedRole} Tier</span>
             </span>
           </div>
