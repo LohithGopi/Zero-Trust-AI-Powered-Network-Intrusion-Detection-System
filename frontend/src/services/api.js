@@ -1,6 +1,7 @@
 // API Service Client matching Flask Backend Blueprints
 
-const API_BASE = '/api';
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '') : '';
+const API_BASE = `${RAW_BASE}/api`;
 
 export const getAuthToken = () => localStorage.getItem('nids_token');
 

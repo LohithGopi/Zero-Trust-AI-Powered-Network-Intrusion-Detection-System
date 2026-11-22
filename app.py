@@ -21,6 +21,13 @@ def create_app(test_config=None):
     Config.init_app(app)
     init_db(app)
 
+    # Enable CORS for external frontend deployment (e.g. Vercel)
+    try:
+        from flask_cors import CORS
+        CORS(app, origins="*", supports_credentials=True)
+    except ImportError:
+        pass
+
     # Register Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(dataset_bp)
